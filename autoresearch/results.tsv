@@ -8,3 +8,4 @@ REF     	0.00    	0.00    	0.00    	0.00	0.00	reference	Kaggle: autoresearch tre
 0a598b8	404480.82	380207.09	508777.47	1058970.43	1191649.17	keep	baseline: Prophet + LGBM residual, v3 features
 6de2bb8	404945.14	387217.76	494817.57	704383.93	734837.49	keep	exp1: log1p Prophet target
 0a35016	464815.44	365366.49	558869.97	1386437.70	1090970.39	discard	exp2: log1p Prophet + exog regressors — regresses BOTH val +15% and ext +97%
+b6ae9d1	393772.84	362175.61	495500.35	652014.76	737563.67	keep	exp3: log1p Prophet, changepoint_prior_scale=0.1 (was 0.05)
