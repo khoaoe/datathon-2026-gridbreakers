@@ -48,7 +48,7 @@ from modeling.config import LGBM_PARAMS
 # ═════════════════════════════════════════════════════════════════════════════
 # experiment identity — agent updates every experiment
 # ═════════════════════════════════════════════════════════════════════════════
-EXPERIMENT_DESC = "FINAL exp3b: log1p Prophet cp=0.2 + default LGBM residual (best val)"
+EXPERIMENT_DESC = "exp13: revert to ex_08 Prophet (cp=0.05, no log) + LGBM L1"
 
 # Hyperparameters the agent can tweak
 PROPHET_KW = dict(
@@ -56,13 +56,14 @@ PROPHET_KW = dict(
     weekly_seasonality=True,
     daily_seasonality=False,
     seasonality_mode="multiplicative",
-    changepoint_prior_scale=0.2,
+    changepoint_prior_scale=0.05,
 )
-LOG_PROPHET = True                 # fit Prophet on log1p(target)?
+LOG_PROPHET = False                # fit Prophet on log1p(target)?
 USE_PROPHET_REGRESSORS = False     # add_regressor: is_promo, is_tet, etc.
 PROPHET_COUNTRY_HOLIDAYS = None    # add Prophet built-in holidays (None/"VN"/"US")
 DROP_LAG_FEATURES = False          # residual LGBM: drop target lag/rolling?
-LGBM_KW = LGBM_PARAMS.copy()
+LGBM_KW = {**LGBM_PARAMS, "objective": "regression_l1", "n_estimators": 5000,
+           "learning_rate": 0.02}
 RUN_EXTRAPOLATION_CHECK = True     # toggle the 2nd val slice (~+60s)
 PROPHET_TRAIN_YEARS: float | None = None  # e.g. 4.0 = last 4yr only (dampens trend)
 
