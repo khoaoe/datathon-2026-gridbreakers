@@ -1,0 +1,31 @@
+{
+  "experiment": "ex_08_prophet_residual",
+  "timestamp": "2026-04-18T14:24:20.576268",
+  "elapsed_sec": 166.7,
+  "params": {
+    "objective": "regression",
+    "metric": "mae",
+    "boosting_type": "gbdt",
+    "n_estimators": 3000,
+    "learning_rate": 0.03,
+    "max_depth": 8,
+    "num_leaves": 63,
+    "min_child_samples": 20,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "reg_alpha": 0.1,
+    "reg_lambda": 1.0,
+    "random_state": 42,
+    "verbose": -1,
+    "n_jobs": -1,
+    "n_features": 200
+  },
+  "final_scores": {
+    "mae": 353234.6768288173,
+    "rmse": 441753.5553423956,
+    "r2": 0.6478877682550329,
+    "mape": 20.680300856155238
+  },
+  "total_steps": 0,
+  "notes": "COGS \u2014 MAE=324,051 RMSE=411,770 R\u00b2=0.5954\n"
+}

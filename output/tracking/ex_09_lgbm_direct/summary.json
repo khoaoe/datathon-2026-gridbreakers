@@ -1,0 +1,14 @@
+{
+  "experiment": "ex_09_lgbm_direct",
+  "timestamp": "2026-04-18T14:19:17.093535",
+  "elapsed_sec": 28.5,
+  "params": {},
+  "final_scores": {
+    "mae": 441097.5605942286,
+    "rmse": 565744.6257198657,
+    "r2": 0.4224868480022417,
+    "mape": 28.516402806289793
+  },
+  "total_steps": 0,
+  "notes": "COGS \u2014 MAE=363,103 RMSE=474,999 R\u00b2=0.4616\n"
+}

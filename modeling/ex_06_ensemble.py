@@ -1,77 +1,87 @@
 """
-EX_06: Ensemble of Best Models
-- Weighted average of EX_01 through EX_05 submissions
-- Weights optimized on validation set (if available)
-- Also supports simple averaging as fallback
+EX_06: Ensemble of best submissions.
+
+Uses validation predictions saved by each experiment to fit optimal
+non-negative weights via scipy.optimize (minimizes val MAE on Revenue).
+Falls back to equal average if val predictions are unavailable.
+
+Runs three ensembles:
+  • simple_avg — equal-weighted mean
+  • rank_avg   — fixed weights by model type
+  • optimized  — weights fit on validation Revenue MAE
 """
+from __future__ import annotations
+
 import sys
-import time
 import warnings
-import numpy as np
-import pandas as pd
 from pathlib import Path
 
-warnings.filterwarnings("ignore")
-sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent.parent))
+import numpy as np
+import pandas as pd
 
-from modeling.config import SUBMISSION_DIR
+warnings.filterwarnings("ignore")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from modeling.config import SUBMISSION_DIR, VAL_START, VAL_END
 from modeling.utils import evaluate, load_sales, make_submission
 
+VAL_PRED_DIR = SUBMISSION_DIR / "val"
 
-def load_submission(name):
-    """Load a submission CSV."""
+
+def load_submission(name: str):
     path = SUBMISSION_DIR / name
     if not path.exists():
         return None
     return pd.read_csv(path, parse_dates=["Date"])
 
 
-def optimize_weights(submissions, y_true, names):
-    """
-    Find optimal ensemble weights via scipy minimize.
-    Minimizes MAE on validation predictions.
-    """
+def load_val_preds(name: str):
+    p = VAL_PRED_DIR / f"{name}.csv"
+    if not p.exists():
+        return None
+    return pd.read_csv(p, parse_dates=["Date"])
+
+
+def fit_weights(preds_matrix: np.ndarray, y_true: np.ndarray) -> np.ndarray:
+    """Non-negative weights that sum to 1, minimizing MAE. Nelder-Mead."""
     try:
         from scipy.optimize import minimize
     except ImportError:
-        print("scipy not installed, using equal weights")
-        n = len(submissions)
-        return np.ones(n) / n
+        return np.ones(preds_matrix.shape[1]) / preds_matrix.shape[1]
 
-    preds = np.column_stack(submissions)
+    n = preds_matrix.shape[1]
 
     def objective(w):
-        w = np.abs(w) / np.abs(w).sum()  # normalize
-        blend = preds @ w
+        w_ = np.abs(w)
+        if w_.sum() == 0:
+            w_ = np.ones_like(w_)
+        w_ = w_ / w_.sum()
+        blend = preds_matrix @ w_
         return np.mean(np.abs(y_true - blend))
 
-    n = len(submissions)
     x0 = np.ones(n) / n
-    result = minimize(objective, x0, method="Nelder-Mead",
-                      options={"maxiter": 10000})
-    weights = np.abs(result.x) / np.abs(result.x).sum()
-
-    print("Optimized weights:")
-    for name, w in zip(names, weights):
-        print(f"  {name}: {w:.3f}")
-    return weights
+    res = minimize(objective, x0, method="Nelder-Mead",
+                   options={"maxiter": 5000, "xatol": 1e-5, "fatol": 1e-3})
+    w = np.abs(res.x)
+    return w / w.sum()
 
 
 def main():
-    start = time.time()
     train, test = load_sales()
 
-    print("=" * 60)
+    print("=" * 70)
     print("EX_06: ENSEMBLE")
-    print("=" * 60)
+    print("=" * 70)
 
-    # ── Load all available submissions ───────────────────────────────
     sub_files = {
-        "ex_01_naive": "ex_01_naive.csv",
-        "ex_02_prophet": "ex_02_prophet.csv",
-        "ex_03_lgbm": "ex_03_lgbm.csv",
-        "ex_04_xgb": "ex_04_xgb.csv",
-        "ex_05_nhits": "ex_05_nhits.csv",
+        "ex_01_naive":            "ex_01_naive.csv",
+        "ex_02_prophet":          "ex_02_prophet.csv",
+        "ex_03_lgbm":             "ex_03_lgbm.csv",
+        "ex_04_xgb":              "ex_04_xgb.csv",
+        "ex_05_nhits":            "ex_05_nhits.csv",
+        "ex_07_lgbm_v3":          "ex_07_lgbm_v3.csv",
+        "ex_08_prophet_residual": "ex_08_prophet_residual.csv",
+        "ex_09_lgbm_direct":      "ex_09_lgbm_direct.csv",
     }
 
     loaded = {}
@@ -79,62 +89,91 @@ def main():
         sub = load_submission(fname)
         if sub is not None:
             loaded[name] = sub
-            print(f"  Loaded {name} ({len(sub)} rows)")
+            print(f"  loaded {name} ({len(sub)})")
         else:
-            print(f"  Skipped {name} (not found)")
+            print(f"  skip   {name} (not found)")
 
     if len(loaded) < 2:
-        print("\nNeed at least 2 submissions to ensemble. Run more experiments first.")
+        print("\nNeed ≥2 submissions to ensemble.")
         return None
 
-    # ── Simple average ensemble ──────────────────────────────────────
-    print(f"\nEnsembling {len(loaded)} models...")
     names = list(loaded.keys())
+    rev_matrix_test = np.column_stack([loaded[n]["Revenue"].values for n in names])
+    cogs_matrix_test = np.column_stack([loaded[n]["COGS"].values for n in names])
 
-    rev_preds = np.column_stack([loaded[n]["Revenue"].values for n in names])
-    cogs_preds = np.column_stack([loaded[n]["COGS"].values for n in names])
+    # ── 1. Simple average ──
+    make_submission(
+        test["Date"], rev_matrix_test.mean(axis=1), cogs_matrix_test.mean(axis=1),
+        SUBMISSION_DIR / "ex_06_ensemble_avg.csv",
+    )
 
-    # Equal-weight average
-    rev_avg = rev_preds.mean(axis=1)
-    cogs_avg = cogs_preds.mean(axis=1)
+    # ── 2. Rank-based weighting ──
+    weights_rank = {}
+    for n in names:
+        if "lgbm_v3" in n:        weights_rank[n] = 0.30
+        elif "prophet_residual" in n: weights_rank[n] = 0.20
+        elif "lgbm_direct" in n:      weights_rank[n] = 0.15
+        elif "lgbm" in n:             weights_rank[n] = 0.15
+        elif "xgb" in n:              weights_rank[n] = 0.10
+        elif "nhits" in n:            weights_rank[n] = 0.05
+        elif "prophet" in n:          weights_rank[n] = 0.03
+        else:                         weights_rank[n] = 0.02
+    tot = sum(weights_rank.values())
+    w_rank = np.array([weights_rank[n] / tot for n in names])
+    make_submission(
+        test["Date"], rev_matrix_test @ w_rank, cogs_matrix_test @ w_rank,
+        SUBMISSION_DIR / "ex_06_ensemble_weighted.csv",
+    )
 
-    make_submission(test["Date"], rev_avg, cogs_avg,
-                    SUBMISSION_DIR / "ex_06_ensemble_avg.csv")
+    # ── 3. Optimized weights using validation predictions ──
+    val_preds_rev, val_preds_cogs, active_names = [], [], []
+    val_dates = None
+    for n in names:
+        vp = load_val_preds(n)
+        if vp is None:
+            continue
+        if val_dates is None:
+            val_dates = vp["Date"]
+        vp = vp.set_index("Date").reindex(val_dates).reset_index()
+        val_preds_rev.append(vp["Revenue"].values)
+        val_preds_cogs.append(vp["COGS"].values)
+        active_names.append(n)
 
-    # ── Weighted ensemble (if we have the best 2-3 models) ───────────
-    # Use 70% best model + 30% second best as a simple heuristic
-    # Or if scipy is available, optimize on some metric
-    if len(loaded) >= 3:
-        # Rank-based weighting: give more weight to tree models
-        weights = {}
-        for n in names:
-            if "lgbm" in n:
-                weights[n] = 0.4
-            elif "xgb" in n:
-                weights[n] = 0.3
-            elif "nhits" in n:
-                weights[n] = 0.15
-            elif "prophet" in n:
-                weights[n] = 0.10
-            else:
-                weights[n] = 0.05
+    if len(active_names) >= 2 and val_dates is not None:
+        print(f"\nOptimizing weights on validation ({len(val_dates)} rows, "
+              f"{len(active_names)} models: {active_names})")
+        val_rev_true = train.set_index("Date").reindex(val_dates)["Revenue"].values
+        val_cogs_true = train.set_index("Date").reindex(val_dates)["COGS"].values
 
-        # Normalize
-        total = sum(weights[n] for n in names)
-        w_array = np.array([weights[n] / total for n in names])
+        rev_val_mat = np.column_stack(val_preds_rev)
+        cogs_val_mat = np.column_stack(val_preds_cogs)
 
-        print("\nWeighted ensemble:")
-        for n, w in zip(names, w_array):
-            print(f"  {n}: {w:.3f}")
+        w_rev = fit_weights(rev_val_mat, val_rev_true)
+        w_cogs = fit_weights(cogs_val_mat, val_cogs_true)
 
-        rev_weighted = rev_preds @ w_array
-        cogs_weighted = cogs_preds @ w_array
+        print("  Optimized Revenue weights:")
+        for nm, w in zip(active_names, w_rev):
+            print(f"    {nm:30s} {w:.3f}")
+        print("  Optimized COGS weights:")
+        for nm, w in zip(active_names, w_cogs):
+            print(f"    {nm:30s} {w:.3f}")
 
-        make_submission(test["Date"], rev_weighted, cogs_weighted,
-                        SUBMISSION_DIR / "ex_06_ensemble_weighted.csv")
+        # Validation score with optimized weights
+        blend_rev = rev_val_mat @ w_rev
+        blend_cogs = cogs_val_mat @ w_cogs
+        evaluate(val_rev_true, blend_rev, "Ensemble val Revenue")
+        evaluate(val_cogs_true, blend_cogs, "Ensemble val COGS")
 
-    elapsed = time.time() - start
-    print(f"\nTotal time: {elapsed:.1f}s")
+        # Apply weights to test submissions (restricted to active_names)
+        idx = [names.index(n) for n in active_names]
+        rev_test_active = rev_matrix_test[:, idx]
+        cogs_test_active = cogs_matrix_test[:, idx]
+        make_submission(
+            test["Date"], rev_test_active @ w_rev, cogs_test_active @ w_cogs,
+            SUBMISSION_DIR / "ex_06_ensemble_optimized.csv",
+        )
+    else:
+        print("\nSkipped optimized ensemble (need ≥2 experiments with val preds).")
 
 
 if __name__ == "__main__":

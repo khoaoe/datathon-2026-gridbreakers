@@ -41,9 +41,13 @@ TRAIN_END = "2022-12-31"
 TEST_START = "2023-01-01"
 TEST_END = "2024-07-01"
 
-# Validation: hold out last year of training for local eval
-VAL_START = "2022-01-01"
+# Validation: spec-compliant Q4 2022 holdout
+VAL_START = "2022-10-01"
 VAL_END = "2022-12-31"
+
+# Covid dip window (feature, not filter)
+COVID_START = "2020-03-01"
+COVID_END = "2021-06-30"
 
 # ── Feature config ────────────────────────────────────────────────────────
 LAG_DAYS = [1, 2, 3, 7, 14, 21, 28, 60, 90, 180, 365]
@@ -66,6 +70,21 @@ LGBM_PARAMS = {
     "random_state": SEED,
     "verbose": -1,
     "n_jobs": -1,
+}
+
+# Tweedie variant for heavy-tailed revenue
+LGBM_PARAMS_TWEEDIE = {
+    **LGBM_PARAMS,
+    "objective": "tweedie",
+    "tweedie_variance_power": 1.5,
+    "metric": "mae",
+}
+
+# Log-target LGBM uses MSE on log-space (equivalent to geometric-mean loss)
+LGBM_PARAMS_LOG = {
+    **LGBM_PARAMS,
+    "objective": "regression",
+    "metric": "mae",
 }
 
 # ── XGBoost defaults ─────────────────────────────────────────────────────

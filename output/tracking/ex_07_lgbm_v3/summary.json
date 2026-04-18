@@ -1,0 +1,36 @@
+{
+  "experiment": "ex_07_lgbm_v3",
+  "timestamp": "2026-04-18T14:15:43.823155",
+  "elapsed_sec": 93.2,
+  "params": {
+    "objective": "regression",
+    "metric": "mae",
+    "boosting_type": "gbdt",
+    "n_estimators": 3000,
+    "learning_rate": 0.03,
+    "max_depth": 8,
+    "num_leaves": 63,
+    "min_child_samples": 20,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "reg_alpha": 0.1,
+    "reg_lambda": 1.0,
+    "random_state": 42,
+    "verbose": -1,
+    "n_jobs": -1,
+    "n_features": 198,
+    "log_target": true,
+    "h_h1_7": 586975.9468770697,
+    "h_h8_30": 307297.5274666183,
+    "h_h31_90": 366820.5811173547,
+    "h_h91_365": 242635.49932520953
+  },
+  "final_scores": {
+    "mae": 365991.09375612397,
+    "rmse": 479395.09050314367,
+    "r2": 0.5853246984619556,
+    "mape": 20.387672421448812
+  },
+  "total_steps": 19,
+  "notes": "COGS \u2014 MAE=342,503 RMSE=442,324 R\u00b2=0.5331\n"
+}

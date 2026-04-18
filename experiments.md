@@ -1,26 +1,42 @@
 # Experiment Tracker
 
+**NOTE:** Val split changed from full 2022 → Q4 2022 (2022-10-01 → 2022-12-31) per
+datathon spec. Rows 07+ use the new split; rows 01–05 show old-split numbers.
+
 ## Scoreboard
 
 | # | Experiment | Status | Val MAE | Val RMSE | Val R² | Kaggle MAE | Time | Notes |
 |---|---|---|---|---|---|---|---|---|
 | 01 | Naive Baseline | `[x]` | 837,704 | 1,161,819 | 0.5182 | 1,247,026 | 0.1s | Seasonal naive (best of 3) |
 | 02 | Prophet | `[x]` | — | — | — | 1,393,459 | — | Multiplicative seasonality + holidays |
-| 03 | LightGBM (v2) | `[x]` | 560,163 | 753,596 | 0.7973 | **973,611** | 99s | v2 features + profiles |
+| 03 | LightGBM (v2) | `[x]` | 560,163 | 753,596 | 0.7973 | **973,611** | 99s | v2 features + profiles (old val) |
 | 04 | XGBoost (GPU) | `[x]` | — | — | — | 1,040,223 | — | v2 features + CUDA |
 | 05 | N-HiTS | `[x]` | 557,578 | 765,589 | 0.7570 | 1,287,946 | 50s | Deep learning, neuralforecast |
-| 06 | Ensemble | `[x]` | — | — | — | **898,680** | — | Weighted avg of best models (Simple Avg: 976,579) |
+| 06 | Ensemble (old) | `[x]` | — | — | — | **898,680** | — | Weighted avg of best models |
+| 07 | LightGBM v3 | `[x]` | **365,991** | 479,395 | 0.5853 | — | 93s | v3 FE + log-target + ratio COGS |
+| 08 | Prophet + LGBM resid | `[x]` | **353,234** | 441,753 | 0.6479 | — | 167s | Residual stack on Prophet trend |
+| 09 | LGBM direct horizon | `[x]` | 441,097 | 565,744 | 0.4225 | — | 29s | 5 per-horizon models (stitched) |
+| 06* | Ensemble (optimized) | `[x]` | **345,821** | 443,632 | 0.6449 | — | 3s | scipy-optimized weights on val |
 
 ## How to Run
 
 ```bash
-# From project root
+# From project root — use the `datathon` conda env
+conda activate datathon
+
 python -m modeling.ex_01_naive_baseline
 python -m modeling.ex_02_prophet
 python -m modeling.ex_03_lgbm
 python -m modeling.ex_04_xgb
 python -m modeling.ex_05_nhits
-python -m modeling.ex_06_ensemble
+python -m modeling.ex_07_lgbm_v3           # v3 features, log target, ratio COGS
+python -m modeling.ex_08_prophet_residual  # Prophet + LGBM residual stack
+python -m modeling.ex_09_lgbm_direct       # direct per-horizon LGBM
+python -m modeling.ex_06_ensemble          # avg / weighted / scipy-optimized
+
+# autonomous overnight research (karpathy/autoresearch pattern)
+./autoresearch/run_experiment.sh --dry-run
+./autoresearch/run_experiment.sh
 ```
 
 ## Submissions

@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# autoresearch
+autoresearch/run.log
+autoresearch/runs/
+run.log
+__pycache__/
+*.pyc
+output/models/*.pkl

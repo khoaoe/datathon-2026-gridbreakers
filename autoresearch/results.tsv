@@ -1,0 +1,7 @@
+commit	val_mae_rev	val_mae_cogs	val_rmse_rev	ext_mae_rev	ext_mae_cogs	status	description
+REF     	0.00    	0.00    	0.00    	0.00	0.00	reference	Kaggle: ex_07 LGBM v3 → 1211261
+REF     	0.00    	0.00    	0.00    	0.00	0.00	reference	Kaggle: ex_09 LGBM direct → 1239862
+REF     	0.00    	0.00    	0.00    	0.00	0.00	reference	Kaggle: ex_06 ensemble weighted → 963436
+REF     	0.00    	0.00    	0.00    	0.00	0.00	reference	Kaggle: ex_06 ensemble optimized → 967244
+REF     	0.00    	0.00    	0.00    	0.00	0.00	reference	Kaggle: ex_08 Prophet+LGBM residual → 890575 (best so far)
+REF     	0.00    	0.00    	0.00    	0.00	0.00	reference	Kaggle: autoresearch tree-only baseline → 2082829 (worst, don't revert here)
