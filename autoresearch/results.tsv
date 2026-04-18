@@ -22,3 +22,4 @@ d6d48ea	640579.91	546755.55	892720.86	1234989.06	1022217.30	keep	exp8: Chronos-B
 d6d48ea	493121.94	458652.82	653473.95	1020418.89	857189.55	keep	exp8: Chronos-Bolt-Small zero-shot, chunked 64-step rollout
 04e56be	437047.98	387660.92	556475.55	950262.40	917391.87	keep	exp11: Prophet changepoint_range=0.5, cp=0.1, full history
 6bd51b7	406517.79	356491.38	502744.49	1017689.57	983156.45	keep	exp12: Prophet changepoint_range=0.7, cp=0.2
+4f1bfa6	367234.28	338504.26	468100.73	1136983.99	1272069.73	keep	exp13: revert to ex_08 Prophet (cp=0.05, no log) + LGBM L1
