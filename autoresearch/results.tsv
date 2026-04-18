@@ -5,3 +5,4 @@ REF     	0.00    	0.00    	0.00    	0.00	0.00	reference	Kaggle: ex_06 ensemble w
 REF     	0.00    	0.00    	0.00    	0.00	0.00	reference	Kaggle: ex_06 ensemble optimized → 967244
 REF     	0.00    	0.00    	0.00    	0.00	0.00	reference	Kaggle: ex_08 Prophet+LGBM residual → 890575 (best so far)
 REF     	0.00    	0.00    	0.00    	0.00	0.00	reference	Kaggle: autoresearch tree-only baseline → 2082829 (worst, don't revert here)
+0a598b8	404480.82	380207.09	508777.47	1058970.43	1191649.17	keep	baseline: Prophet + LGBM residual, v3 features
