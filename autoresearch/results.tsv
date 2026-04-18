@@ -10,3 +10,4 @@ REF     	0.00    	0.00    	0.00    	0.00	0.00	reference	Kaggle: autoresearch tre
 0a35016	464815.44	365366.49	558869.97	1386437.70	1090970.39	discard	exp2: log1p Prophet + exog regressors — regresses BOTH val +15% and ext +97%
 b6ae9d1	393772.84	362175.61	495500.35	652014.76	737563.67	keep	exp3: log1p Prophet, changepoint_prior_scale=0.1 (was 0.05)
 f5475e5	375761.38	371025.15	467553.91	643404.67	727047.07	keep	exp3b: log1p Prophet, changepoint_prior_scale=0.2
+cdfaa65	406247.83	383718.33	503191.33	640441.43	715569.70	discard	exp3c: cp=0.3 overfits val (+8.1%), revert to 0.2
