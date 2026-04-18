@@ -48,7 +48,7 @@ from modeling.config import LGBM_PARAMS
 # ═════════════════════════════════════════════════════════════════════════════
 # experiment identity — agent updates every experiment
 # ═════════════════════════════════════════════════════════════════════════════
-EXPERIMENT_DESC = "baseline: Prophet + LGBM residual, v3 features"
+EXPERIMENT_DESC = "exp1: log1p Prophet target"
 
 # Hyperparameters the agent can tweak
 PROPHET_KW = dict(
@@ -58,7 +58,7 @@ PROPHET_KW = dict(
     seasonality_mode="multiplicative",
     changepoint_prior_scale=0.05,
 )
-LOG_PROPHET = False                # fit Prophet on log1p(target)?
+LOG_PROPHET = True                 # fit Prophet on log1p(target)?
 USE_PROPHET_REGRESSORS = False     # add_regressor: is_promo, is_tet, etc.
 DROP_LAG_FEATURES = False          # residual LGBM: drop target lag/rolling?
 LGBM_KW = LGBM_PARAMS.copy()
