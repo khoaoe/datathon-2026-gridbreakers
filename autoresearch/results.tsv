@@ -14,3 +14,4 @@ cdfaa65	406247.83	383718.33	503191.33	640441.43	715569.70	discard	exp3c: cp=0.3 
 de52ac4	427356.22	429121.35	547828.77	735687.64	767660.97	discard	exp4: drop lag/rolling regresses both (+14%) — lag features still useful
 8d3d521	403339.06	365093.63	497244.40	632955.60	697675.38	discard	exp5: country_holidays=VN regresses val +7%, ext only -1.6%
 44c701c	399146.78	373656.88	508148.48	629463.25	700648.09	discard	exp6: more LGBM reg — val +6.2%, ext only -2.2% (net loss)
+08b8d83	495714.80	376419.25	601146.11	603929.10	535912.66	keep	exp7: Prophet 4yr window (dampens trend extrapolation)
