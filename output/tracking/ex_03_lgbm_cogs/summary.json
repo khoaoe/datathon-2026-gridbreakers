@@ -1,0 +1,13 @@
+{
+  "experiment": "ex_03_lgbm_cogs",
+  "timestamp": "2026-04-18T11:53:36.718032",
+  "elapsed_sec": 96.8,
+  "params": {},
+  "final_scores": {
+    "mae": 479844.97252074146,
+    "rmse": 645830.4782626077,
+    "r2": 0.8039422213366348
+  },
+  "total_steps": 7,
+  "notes": ""
+}
