@@ -223,3 +223,4 @@ run.log
 __pycache__/
 *.pyc
 output/models/*.pkl
+.hf_cache/

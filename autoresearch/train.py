@@ -48,7 +48,7 @@ from modeling.config import LGBM_PARAMS
 # ═════════════════════════════════════════════════════════════════════════════
 # experiment identity — agent updates every experiment
 # ═════════════════════════════════════════════════════════════════════════════
-EXPERIMENT_DESC = "exp7: Prophet 4yr window (dampens trend extrapolation)"
+EXPERIMENT_DESC = "exp11: Prophet changepoint_range=0.5, cp=0.1, full history"
 
 # Hyperparameters the agent can tweak
 PROPHET_KW = dict(
@@ -56,7 +56,8 @@ PROPHET_KW = dict(
     weekly_seasonality=True,
     daily_seasonality=False,
     seasonality_mode="multiplicative",
-    changepoint_prior_scale=0.2,
+    changepoint_prior_scale=0.1,
+    changepoint_range=0.5,  # restrict changepoints to first 50% → dampens extrap
 )
 LOG_PROPHET = True                 # fit Prophet on log1p(target)?
 USE_PROPHET_REGRESSORS = False     # add_regressor: is_promo, is_tet, etc.
@@ -64,7 +65,7 @@ PROPHET_COUNTRY_HOLIDAYS = None    # add Prophet built-in holidays (None/"VN"/"U
 DROP_LAG_FEATURES = False          # residual LGBM: drop target lag/rolling?
 LGBM_KW = LGBM_PARAMS.copy()
 RUN_EXTRAPOLATION_CHECK = True     # toggle the 2nd val slice (~+60s)
-PROPHET_TRAIN_YEARS: float | None = 4.0  # e.g. 4.0 = last 4yr only (dampens trend)
+PROPHET_TRAIN_YEARS: float | None = None  # e.g. 4.0 = last 4yr only (dampens trend)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
