@@ -48,7 +48,7 @@ from modeling.config import LGBM_PARAMS
 # ═════════════════════════════════════════════════════════════════════════════
 # experiment identity — agent updates every experiment
 # ═════════════════════════════════════════════════════════════════════════════
-EXPERIMENT_DESC = "exp1: log1p Prophet target"
+EXPERIMENT_DESC = "exp2: log1p Prophet + exog regressors (promo/holiday/tet/covid)"
 
 # Hyperparameters the agent can tweak
 PROPHET_KW = dict(
@@ -59,7 +59,7 @@ PROPHET_KW = dict(
     changepoint_prior_scale=0.05,
 )
 LOG_PROPHET = True                 # fit Prophet on log1p(target)?
-USE_PROPHET_REGRESSORS = False     # add_regressor: is_promo, is_tet, etc.
+USE_PROPHET_REGRESSORS = True      # add_regressor: is_promo, is_tet, etc.
 DROP_LAG_FEATURES = False          # residual LGBM: drop target lag/rolling?
 LGBM_KW = LGBM_PARAMS.copy()
 RUN_EXTRAPOLATION_CHECK = True     # toggle the 2nd val slice (~+60s)
