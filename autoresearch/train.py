@@ -48,35 +48,32 @@ from modeling.config import LGBM_PARAMS
 # ═════════════════════════════════════════════════════════════════════════════
 # experiment identity — agent updates every experiment
 # ═════════════════════════════════════════════════════════════════════════════
-EXPERIMENT_DESC = "exp21: log1p Prophet cp=0.2 + simpler LGBM (1000 trees, 31 leaves, high reg)"
+EXPERIMENT_DESC = "exp24: log1p Prophet cp=0.2 ADDITIVE + simpler LGBM (1000t/31l/high-reg)"
 
 PROPHET_KW = dict(
     yearly_seasonality=True,
     weekly_seasonality=True,
     daily_seasonality=False,
-    seasonality_mode="multiplicative",
+    seasonality_mode="additive",    # additive on log = multiplicative on original
     changepoint_prior_scale=0.2,
 )
-LOG_PROPHET = True                 # fit Prophet on log1p(target)
+LOG_PROPHET = True
 USE_PROPHET_REGRESSORS = False
 PROPHET_COUNTRY_HOLIDAYS = None
 DROP_LAG_FEATURES = False
-# Simpler LGBM: fewer trees, fewer leaves, more regularization
-# Hypothesis: complex residual model memorizes in-sample lag patterns
-# that compound errors during recursive prediction at long horizons
 LGBM_KW = {
     "objective": "regression",
     "metric": "mae",
     "boosting_type": "gbdt",
-    "n_estimators": 1000,          # was 3000
-    "learning_rate": 0.05,         # was 0.03 — faster with fewer trees
-    "max_depth": 6,                # was 8
-    "num_leaves": 31,              # was 63
-    "min_child_samples": 50,       # was 20 — more conservative splits
-    "subsample": 0.7,              # was 0.8
-    "colsample_bytree": 0.7,      # was 0.8
-    "reg_alpha": 1.0,             # was 0.1 — 10x stronger L1 reg
-    "reg_lambda": 5.0,            # was 1.0 — 5x stronger L2 reg
+    "n_estimators": 1000,
+    "learning_rate": 0.05,
+    "max_depth": 6,
+    "num_leaves": 31,
+    "min_child_samples": 50,
+    "subsample": 0.7,
+    "colsample_bytree": 0.7,
+    "reg_alpha": 1.0,
+    "reg_lambda": 5.0,
     "random_state": 42,
     "verbose": -1,
     "n_jobs": -1,
@@ -304,14 +301,10 @@ def main():
     t0 = time.time()
     print(f"[autoresearch] experiment = {EXPERIMENT_DESC}")
     print(f"[autoresearch] config: log_prophet={LOG_PROPHET}  "
-          f"regressors={USE_PROPHET_REGRESSORS}  "
-          f"country_holidays={PROPHET_COUNTRY_HOLIDAYS}  "
-          f"drop_lag={DROP_LAG_FEATURES}  "
+          f"seasonality_mode={PROPHET_KW['seasonality_mode']}  "
           f"changepoint_prior={PROPHET_KW['changepoint_prior_scale']}  "
           f"lgbm_leaves={LGBM_KW['num_leaves']}  "
-          f"lgbm_trees={LGBM_KW['n_estimators']}  "
-          f"lgbm_reg_alpha={LGBM_KW['reg_alpha']}  "
-          f"lgbm_reg_lambda={LGBM_KW['reg_lambda']}")
+          f"lgbm_trees={LGBM_KW['n_estimators']}")
 
     train_fit, val, test = load_splits()
     full_train = pd.concat([train_fit, val], ignore_index=True)
