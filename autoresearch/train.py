@@ -48,9 +48,10 @@ from modeling.config import LGBM_PARAMS
 # ═════════════════════════════════════════════════════════════════════════════
 # experiment identity — agent updates every experiment
 # ═════════════════════════════════════════════════════════════════════════════
-EXPERIMENT_DESC = "exp13: revert to ex_08 Prophet (cp=0.05, no log) + LGBM L1"
+EXPERIMENT_DESC = "baseline: match modeling/ex_08_prophet_residual (Kaggle ~890k)"
 
-# Hyperparameters the agent can tweak
+# Hyperparameters — keep aligned with modeling/ex_08_prophet_residual.py until
+# an experiment clearly beats ex_08 on BOTH val and Kaggle.
 PROPHET_KW = dict(
     yearly_seasonality=True,
     weekly_seasonality=True,
@@ -62,8 +63,7 @@ LOG_PROPHET = False                # fit Prophet on log1p(target)?
 USE_PROPHET_REGRESSORS = False     # add_regressor: is_promo, is_tet, etc.
 PROPHET_COUNTRY_HOLIDAYS = None    # add Prophet built-in holidays (None/"VN"/"US")
 DROP_LAG_FEATURES = False          # residual LGBM: drop target lag/rolling?
-LGBM_KW = {**LGBM_PARAMS, "objective": "regression_l1", "n_estimators": 5000,
-           "learning_rate": 0.02}
+LGBM_KW = LGBM_PARAMS.copy()
 RUN_EXTRAPOLATION_CHECK = True     # toggle the 2nd val slice (~+60s)
 PROPHET_TRAIN_YEARS: float | None = None  # e.g. 4.0 = last 4yr only (dampens trend)
 
