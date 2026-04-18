@@ -48,14 +48,14 @@ from modeling.config import LGBM_PARAMS
 # ═════════════════════════════════════════════════════════════════════════════
 # experiment identity — agent updates every experiment
 # ═════════════════════════════════════════════════════════════════════════════
-EXPERIMENT_DESC = "exp25: log1p Prophet cp=0.25 ADDITIVE + simpler LGBM (1000t/31l)"
+EXPERIMENT_DESC = "exp26: log1p Prophet cp=0.3 ADDITIVE + simpler LGBM (1000t/31l)"
 
 PROPHET_KW = dict(
     yearly_seasonality=True,
     weekly_seasonality=True,
     daily_seasonality=False,
     seasonality_mode="additive",
-    changepoint_prior_scale=0.25,   # slightly more flexible than 0.2
+    changepoint_prior_scale=0.3,    # push cp higher
 )
 LOG_PROPHET = True
 USE_PROPHET_REGRESSORS = False
