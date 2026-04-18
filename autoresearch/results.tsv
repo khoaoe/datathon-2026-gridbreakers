@@ -20,3 +20,4 @@ d6d48ea	406096.67	378451.45	523564.17	763442.21	684643.06	keep	exp9: seasonal-na
 d6d48ea	0.00	0.00	0.00	0.00	0.00	keep	exp10: blend w_prophet=0.70 targeting realistic 5.5% CAGR
 d6d48ea	640579.91	546755.55	892720.86	1234989.06	1022217.30	keep	exp8: Chronos-Bolt-Small zero-shot, chunked 64-step rollout
 d6d48ea	493121.94	458652.82	653473.95	1020418.89	857189.55	keep	exp8: Chronos-Bolt-Small zero-shot, chunked 64-step rollout
+04e56be	437047.98	387660.92	556475.55	950262.40	917391.87	keep	exp11: Prophet changepoint_range=0.5, cp=0.1, full history

@@ -48,7 +48,7 @@ from modeling.config import LGBM_PARAMS
 # ═════════════════════════════════════════════════════════════════════════════
 # experiment identity — agent updates every experiment
 # ═════════════════════════════════════════════════════════════════════════════
-EXPERIMENT_DESC = "exp11: Prophet changepoint_range=0.5, cp=0.1, full history"
+EXPERIMENT_DESC = "exp12: Prophet changepoint_range=0.7, cp=0.2"
 
 # Hyperparameters the agent can tweak
 PROPHET_KW = dict(
@@ -56,8 +56,8 @@ PROPHET_KW = dict(
     weekly_seasonality=True,
     daily_seasonality=False,
     seasonality_mode="multiplicative",
-    changepoint_prior_scale=0.1,
-    changepoint_range=0.5,  # restrict changepoints to first 50% → dampens extrap
+    changepoint_prior_scale=0.2,
+    changepoint_range=0.7,  # slight dampening vs default 0.8
 )
 LOG_PROPHET = True                 # fit Prophet on log1p(target)?
 USE_PROPHET_REGRESSORS = False     # add_regressor: is_promo, is_tet, etc.
