@@ -48,24 +48,41 @@ from modeling.config import LGBM_PARAMS
 # ═════════════════════════════════════════════════════════════════════════════
 # experiment identity — agent updates every experiment
 # ═════════════════════════════════════════════════════════════════════════════
-EXPERIMENT_DESC = "baseline: match modeling/ex_08_prophet_residual (Kaggle ~890k)"
+EXPERIMENT_DESC = "exp21: log1p Prophet cp=0.2 + simpler LGBM (1000 trees, 31 leaves, high reg)"
 
-# Hyperparameters — keep aligned with modeling/ex_08_prophet_residual.py until
-# an experiment clearly beats ex_08 on BOTH val and Kaggle.
 PROPHET_KW = dict(
     yearly_seasonality=True,
     weekly_seasonality=True,
     daily_seasonality=False,
     seasonality_mode="multiplicative",
-    changepoint_prior_scale=0.05,
+    changepoint_prior_scale=0.2,
 )
-LOG_PROPHET = False                # fit Prophet on log1p(target)?
-USE_PROPHET_REGRESSORS = False     # add_regressor: is_promo, is_tet, etc.
-PROPHET_COUNTRY_HOLIDAYS = None    # add Prophet built-in holidays (None/"VN"/"US")
-DROP_LAG_FEATURES = False          # residual LGBM: drop target lag/rolling?
-LGBM_KW = LGBM_PARAMS.copy()
-RUN_EXTRAPOLATION_CHECK = True     # toggle the 2nd val slice (~+60s)
-PROPHET_TRAIN_YEARS: float | None = None  # e.g. 4.0 = last 4yr only (dampens trend)
+LOG_PROPHET = True                 # fit Prophet on log1p(target)
+USE_PROPHET_REGRESSORS = False
+PROPHET_COUNTRY_HOLIDAYS = None
+DROP_LAG_FEATURES = False
+# Simpler LGBM: fewer trees, fewer leaves, more regularization
+# Hypothesis: complex residual model memorizes in-sample lag patterns
+# that compound errors during recursive prediction at long horizons
+LGBM_KW = {
+    "objective": "regression",
+    "metric": "mae",
+    "boosting_type": "gbdt",
+    "n_estimators": 1000,          # was 3000
+    "learning_rate": 0.05,         # was 0.03 — faster with fewer trees
+    "max_depth": 6,                # was 8
+    "num_leaves": 31,              # was 63
+    "min_child_samples": 50,       # was 20 — more conservative splits
+    "subsample": 0.7,              # was 0.8
+    "colsample_bytree": 0.7,      # was 0.8
+    "reg_alpha": 1.0,             # was 0.1 — 10x stronger L1 reg
+    "reg_lambda": 5.0,            # was 1.0 — 5x stronger L2 reg
+    "random_state": 42,
+    "verbose": -1,
+    "n_jobs": -1,
+}
+RUN_EXTRAPOLATION_CHECK = True
+PROPHET_TRAIN_YEARS: float | None = None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -152,7 +169,7 @@ def _build_residual_features(
     feat_df["prophet_rev"] = prophet_predict(m_rev, feat_df["Date"], regs_rev,
                                              log_target=log_target)
     feat_df["prophet_cogs"] = prophet_predict(m_cogs, feat_df["Date"], regs_cogs,
-                                              log_target=log_target)
+                                               log_target=log_target)
     feat_df["resid_rev"] = feat_df["Revenue"] - feat_df["prophet_rev"]
     feat_df["resid_cogs"] = feat_df["COGS"] - feat_df["prophet_cogs"]
 
@@ -290,7 +307,11 @@ def main():
           f"regressors={USE_PROPHET_REGRESSORS}  "
           f"country_holidays={PROPHET_COUNTRY_HOLIDAYS}  "
           f"drop_lag={DROP_LAG_FEATURES}  "
-          f"changepoint_prior={PROPHET_KW['changepoint_prior_scale']}")
+          f"changepoint_prior={PROPHET_KW['changepoint_prior_scale']}  "
+          f"lgbm_leaves={LGBM_KW['num_leaves']}  "
+          f"lgbm_trees={LGBM_KW['n_estimators']}  "
+          f"lgbm_reg_alpha={LGBM_KW['reg_alpha']}  "
+          f"lgbm_reg_lambda={LGBM_KW['reg_lambda']}")
 
     train_fit, val, test = load_splits()
     full_train = pd.concat([train_fit, val], ignore_index=True)
