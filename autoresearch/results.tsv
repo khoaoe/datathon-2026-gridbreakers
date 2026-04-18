@@ -23,3 +23,4 @@ d6d48ea	493121.94	458652.82	653473.95	1020418.89	857189.55	keep	exp8: Chronos-Bo
 04e56be	437047.98	387660.92	556475.55	950262.40	917391.87	keep	exp11: Prophet changepoint_range=0.5, cp=0.1, full history
 6bd51b7	406517.79	356491.38	502744.49	1017689.57	983156.45	keep	exp12: Prophet changepoint_range=0.7, cp=0.2
 4f1bfa6	367234.28	338504.26	468100.73	1136983.99	1272069.73	keep	exp13: revert to ex_08 Prophet (cp=0.05, no log) + LGBM L1
+62d7d1a	371822.25	338140.93	461566.57	620816.69	690420.67	keep	exp24: log1p Prophet cp=0.2 ADDITIVE + simpler LGBM (1000t/31l/high-reg)
