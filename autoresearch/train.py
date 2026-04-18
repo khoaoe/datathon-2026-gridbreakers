@@ -48,7 +48,7 @@ from modeling.config import LGBM_PARAMS
 # ═════════════════════════════════════════════════════════════════════════════
 # experiment identity — agent updates every experiment
 # ═════════════════════════════════════════════════════════════════════════════
-EXPERIMENT_DESC = "FINAL exp3b: log1p Prophet cp=0.2 + default LGBM residual (best)"
+EXPERIMENT_DESC = "exp7: Prophet 4yr window (dampens trend extrapolation)"
 
 # Hyperparameters the agent can tweak
 PROPHET_KW = dict(
@@ -64,6 +64,7 @@ PROPHET_COUNTRY_HOLIDAYS = None    # add Prophet built-in holidays (None/"VN"/"U
 DROP_LAG_FEATURES = False          # residual LGBM: drop target lag/rolling?
 LGBM_KW = LGBM_PARAMS.copy()
 RUN_EXTRAPOLATION_CHECK = True     # toggle the 2nd val slice (~+60s)
+PROPHET_TRAIN_YEARS: float | None = 4.0  # e.g. 4.0 = last 4yr only (dampens trend)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -234,11 +235,17 @@ def _fit_and_forecast(
     import lightgbm as lgb
 
     print(f"  [{label}] fitting Prophet...")
-    m_rev, regs_rev = fit_prophet(train_df, "Revenue",
+    prophet_train = train_df
+    if PROPHET_TRAIN_YEARS is not None:
+        cutoff = train_df["Date"].max() - pd.Timedelta(days=int(PROPHET_TRAIN_YEARS * 365.25))
+        prophet_train = train_df[train_df["Date"] >= cutoff].copy()
+        print(f"  [{label}] Prophet train window: {prophet_train['Date'].min().date()} "
+              f"→ {prophet_train['Date'].max().date()} ({len(prophet_train)} rows)")
+    m_rev, regs_rev = fit_prophet(prophet_train, "Revenue",
                                   use_regressors=USE_PROPHET_REGRESSORS,
                                   log_target=LOG_PROPHET,
                                   country_holidays=PROPHET_COUNTRY_HOLIDAYS)
-    m_cogs, regs_cogs = fit_prophet(train_df, "COGS",
+    m_cogs, regs_cogs = fit_prophet(prophet_train, "COGS",
                                     use_regressors=USE_PROPHET_REGRESSORS,
                                     log_target=LOG_PROPHET,
                                     country_holidays=PROPHET_COUNTRY_HOLIDAYS)
