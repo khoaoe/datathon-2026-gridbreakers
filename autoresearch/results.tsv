@@ -7,3 +7,4 @@ REF     	0.00    	0.00    	0.00    	0.00	0.00	reference	Kaggle: ex_08 Prophet+LG
 REF     	0.00    	0.00    	0.00    	0.00	0.00	reference	Kaggle: autoresearch tree-only baseline → 2082829 (worst, don't revert here)
 0a598b8	404480.82	380207.09	508777.47	1058970.43	1191649.17	keep	baseline: Prophet + LGBM residual, v3 features
 6de2bb8	404945.14	387217.76	494817.57	704383.93	734837.49	keep	exp1: log1p Prophet target
+0a35016	464815.44	365366.49	558869.97	1386437.70	1090970.39	discard	exp2: log1p Prophet + exog regressors — regresses BOTH val +15% and ext +97%
