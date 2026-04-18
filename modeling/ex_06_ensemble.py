@@ -72,7 +72,6 @@ def main():
         "ex_03_lgbm": "ex_03_lgbm.csv",
         "ex_04_xgb": "ex_04_xgb.csv",
         "ex_05_nhits": "ex_05_nhits.csv",
-        "ex_07_lgbm_exogenous": "ex_07_lgbm_exogenous.csv",
     }
 
     loaded = {}
@@ -102,23 +101,27 @@ def main():
     make_submission(test["Date"], rev_avg, cogs_avg,
                     SUBMISSION_DIR / "ex_06_ensemble_avg.csv")
 
-    # ── Weighted ensemble ────────────────────────────────────────────
+    # ── Weighted ensemble (if we have the best 2-3 models) ───────────
+    # Use 70% best model + 30% second best as a simple heuristic
+    # Or if scipy is available, optimize on some metric
     if len(loaded) >= 3:
+        # Rank-based weighting: give more weight to tree models
         weights = {}
         for n in names:
-            if "exogenous" in n:
-                weights[n] = 0.60
-            elif "ex_03_lgbm" in n:
-                weights[n] = 0.40
+            if "lgbm" in n:
+                weights[n] = 0.4
+            elif "xgb" in n:
+                weights[n] = 0.3
+            elif "nhits" in n:
+                weights[n] = 0.15
+            elif "prophet" in n:
+                weights[n] = 0.10
             else:
-                weights[n] = 0.00  # Dropping everything > 1000k (XGB, N-HiTS, PatchTST, etc.)
+                weights[n] = 0.05
 
         # Normalize
         total = sum(weights[n] for n in names)
-        if total == 0:
-            w_array = np.ones(len(names)) / len(names)
-        else:
-            w_array = np.array([weights[n] / total for n in names])
+        w_array = np.array([weights[n] / total for n in names])
 
         print("\nWeighted ensemble:")
         for n, w in zip(names, w_array):
