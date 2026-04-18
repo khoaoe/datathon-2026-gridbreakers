@@ -48,7 +48,7 @@ from modeling.config import LGBM_PARAMS
 # ═════════════════════════════════════════════════════════════════════════════
 # experiment identity — agent updates every experiment
 # ═════════════════════════════════════════════════════════════════════════════
-EXPERIMENT_DESC = "exp4: drop lag/rolling features from residual LGBM"
+EXPERIMENT_DESC = "exp3b best: log1p Prophet cp=0.2, lag features kept"
 
 # Hyperparameters the agent can tweak
 PROPHET_KW = dict(
@@ -60,7 +60,7 @@ PROPHET_KW = dict(
 )
 LOG_PROPHET = True                 # fit Prophet on log1p(target)?
 USE_PROPHET_REGRESSORS = False     # add_regressor: is_promo, is_tet, etc.
-DROP_LAG_FEATURES = True           # residual LGBM: drop target lag/rolling?
+DROP_LAG_FEATURES = False          # residual LGBM: drop target lag/rolling?
 LGBM_KW = LGBM_PARAMS.copy()
 RUN_EXTRAPOLATION_CHECK = True     # toggle the 2nd val slice (~+60s)
 
