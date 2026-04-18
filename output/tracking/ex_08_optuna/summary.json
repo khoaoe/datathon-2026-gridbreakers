@@ -1,0 +1,25 @@
+{
+  "experiment": "ex_08_optuna",
+  "timestamp": "2026-04-18T12:58:05.918379",
+  "elapsed_sec": 240.5,
+  "params": {
+    "learning_rate": 0.08484397325237239,
+    "num_leaves": 108,
+    "feature_fraction": 0.6212372636326584,
+    "bagging_fraction": 0.7133275801737214,
+    "bagging_freq": 7,
+    "min_child_samples": 13,
+    "objective": "regression_l1",
+    "metric": "l1",
+    "random_state": 42,
+    "n_estimators": 192,
+    "verbose": -1
+  },
+  "final_scores": {
+    "mae": 540680.1482482275,
+    "rmse": 0,
+    "r2": 0
+  },
+  "total_steps": 0,
+  "notes": "LightGBM Tuned with Optuna\n"
+}

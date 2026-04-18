@@ -1,0 +1,17 @@
+{
+  "experiment": "ex_07_chronos",
+  "timestamp": "2026-04-18T12:58:27.630021",
+  "elapsed_sec": 18.1,
+  "params": {
+    "model_id": "amazon/chronos-t5-small",
+    "samples": 20,
+    "agg": "median"
+  },
+  "final_scores": {
+    "mae": 1410053.4850684933,
+    "rmse": 1768007.6921660583,
+    "r2": -0.11572208677653117
+  },
+  "total_steps": 0,
+  "notes": "COGS \u2014 MAE=953,554\n"
+}

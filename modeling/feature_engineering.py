@@ -223,6 +223,12 @@ def compute_aux_profiles():
             avg_sessions_month=("total_sessions", "mean"),
             avg_bounce_month=("avg_bounce", "mean"),
         ).reset_index()
+        
+        daily_wt["dayofyear"] = daily_wt.index.dayofyear
+        profiles["traffic_doy"] = daily_wt.groupby("dayofyear").agg(
+            avg_sessions_doy=("total_sessions", "mean"),
+            avg_visitors_doy=("total_visitors", "mean"),
+        ).reset_index()
     except Exception as e:
         print(f"  Warning: could not process web_traffic — {e}")
 
@@ -235,6 +241,14 @@ def compute_aux_profiles():
                             (promos["end_date"].dt.month >= m)]
             promo_months.append({"month": m, "avg_promos_month": len(active) / 10})
         profiles["promos_month"] = pd.DataFrame(promo_months)
+
+        # Fine-grained daily promo occurrences over the years
+        promo_days = []
+        for d in range(1, 367):
+            active = promos[(promos["start_date"].dt.dayofyear <= d) &
+                            (promos["end_date"].dt.dayofyear >= d)]
+            promo_days.append({"dayofyear": d, "avg_promo_density": len(active) / 10})
+        profiles["promos_doy"] = pd.DataFrame(promo_days)
     except Exception as e:
         print(f"  Warning: could not process promotions — {e}")
 
