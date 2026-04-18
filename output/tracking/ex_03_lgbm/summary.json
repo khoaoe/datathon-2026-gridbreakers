@@ -1,7 +1,7 @@
 {
   "experiment": "ex_03_lgbm",
-  "timestamp": "2026-04-18T11:53:36.502454",
-  "elapsed_sec": 99.0,
+  "timestamp": "2026-04-18T12:20:02.486666",
+  "elapsed_sec": 149.1,
   "params": {
     "objective": "regression",
     "metric": "mae",

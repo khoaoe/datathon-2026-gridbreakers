@@ -7,9 +7,9 @@
 | 01 | Naive Baseline | `[x]` | 837,704 | 1,161,819 | 0.5182 | 1,247,026 | 0.1s | Seasonal naive (best of 3) |
 | 02 | Prophet | `[x]` | — | — | — | 1,393,459 | — | Multiplicative seasonality + holidays |
 | 03 | LightGBM (v2) | `[x]` | 560,163 | 753,596 | 0.7973 | **973,611** | 99s | v2 features + profiles |
-| 04 | XGBoost (GPU) | `[ ]` | — | — | — | — | — | Full features + CUDA |
-| 05 | N-HiTS | `[ ]` | — | — | — | — | — | Deep learning, neuralforecast |
-| 06 | Ensemble | `[ ]` | — | — | — | — | — | Weighted avg of best models |
+| 04 | XGBoost (GPU) | `[x]` | — | — | — | 1,040,223 | — | v2 features + CUDA |
+| 05 | N-HiTS | `[x]` | 557,578 | 765,589 | 0.7570 | 1,287,946 | 50s | Deep learning, neuralforecast |
+| 06 | Ensemble | `[x]` | — | — | — | **898,680** | — | Weighted avg of best models (Simple Avg: 976,579) |
 
 ## How to Run
 

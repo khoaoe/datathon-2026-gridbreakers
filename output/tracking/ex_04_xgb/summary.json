@@ -1,7 +1,7 @@
 {
   "experiment": "ex_04_xgb",
-  "timestamp": "2026-04-18T11:55:40.205054",
-  "elapsed_sec": 206.5,
+  "timestamp": "2026-04-18T12:22:14.532218",
+  "elapsed_sec": 259.2,
   "params": {
     "objective": "reg:squarederror",
     "eval_metric": "mae",

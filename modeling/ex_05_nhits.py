@@ -58,7 +58,7 @@ def main():
         NHITS(
             h=horizon,
             input_size=input_size,
-            max_steps=1000,
+            max_steps=500,
             learning_rate=1e-3,
             batch_size=32,
             n_pool_kernel_size=[16, 8, 1],
@@ -67,7 +67,6 @@ def main():
             random_seed=SEED,
             accelerator="gpu",
             devices=1,
-            early_stop_patience_steps=10,
             val_check_steps=50,
         ),
     ]
@@ -82,7 +81,7 @@ def main():
         NHITS(
             h=horizon,
             input_size=input_size,
-            max_steps=1000,
+            max_steps=500,
             learning_rate=1e-3,
             batch_size=32,
             n_pool_kernel_size=[16, 8, 1],
@@ -91,7 +90,6 @@ def main():
             random_seed=SEED,
             accelerator="gpu",
             devices=1,
-            early_stop_patience_steps=10,
             val_check_steps=50,
         ),
     ]
