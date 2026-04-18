@@ -48,7 +48,7 @@ from modeling.config import LGBM_PARAMS
 # ═════════════════════════════════════════════════════════════════════════════
 # experiment identity — agent updates every experiment
 # ═════════════════════════════════════════════════════════════════════════════
-EXPERIMENT_DESC = "exp3b best: log1p Prophet cp=0.2, lag features kept"
+EXPERIMENT_DESC = "exp5: add Prophet country_holidays=VN"
 
 # Hyperparameters the agent can tweak
 PROPHET_KW = dict(
@@ -60,6 +60,7 @@ PROPHET_KW = dict(
 )
 LOG_PROPHET = True                 # fit Prophet on log1p(target)?
 USE_PROPHET_REGRESSORS = False     # add_regressor: is_promo, is_tet, etc.
+PROPHET_COUNTRY_HOLIDAYS = "VN"    # add Prophet built-in holidays (None/"VN"/"US")
 DROP_LAG_FEATURES = False          # residual LGBM: drop target lag/rolling?
 LGBM_KW = LGBM_PARAMS.copy()
 RUN_EXTRAPOLATION_CHECK = True     # toggle the 2nd val slice (~+60s)
@@ -99,12 +100,18 @@ def _regressor_frame(dates: pd.Series, promo_daily: pd.DataFrame | None = None) 
 
 def fit_prophet(train_df: pd.DataFrame, target: str,
                 use_regressors: bool = False,
-                log_target: bool = False):
+                log_target: bool = False,
+                country_holidays: str | None = None):
     from prophet import Prophet
     df = train_df.rename(columns={"Date": "ds", target: "y"})[["ds", "y"]].copy()
     if log_target:
         df["y"] = np.log1p(df["y"].clip(lower=0))
     m = Prophet(**PROPHET_KW)
+    if country_holidays:
+        try:
+            m.add_country_holidays(country_name=country_holidays)
+        except Exception as e:
+            print(f"    [warn] country_holidays={country_holidays} failed: {e}")
     regs = []
     if use_regressors:
         regs = _prophet_add_regressors(m)
@@ -229,10 +236,12 @@ def _fit_and_forecast(
     print(f"  [{label}] fitting Prophet...")
     m_rev, regs_rev = fit_prophet(train_df, "Revenue",
                                   use_regressors=USE_PROPHET_REGRESSORS,
-                                  log_target=LOG_PROPHET)
+                                  log_target=LOG_PROPHET,
+                                  country_holidays=PROPHET_COUNTRY_HOLIDAYS)
     m_cogs, regs_cogs = fit_prophet(train_df, "COGS",
                                     use_regressors=USE_PROPHET_REGRESSORS,
-                                    log_target=LOG_PROPHET)
+                                    log_target=LOG_PROPHET,
+                                    country_holidays=PROPHET_COUNTRY_HOLIDAYS)
 
     print(f"  [{label}] building residual features...")
     feat_df, bundle, feature_cols = _build_residual_features(
@@ -271,6 +280,7 @@ def main():
     print(f"[autoresearch] experiment = {EXPERIMENT_DESC}")
     print(f"[autoresearch] config: log_prophet={LOG_PROPHET}  "
           f"regressors={USE_PROPHET_REGRESSORS}  "
+          f"country_holidays={PROPHET_COUNTRY_HOLIDAYS}  "
           f"drop_lag={DROP_LAG_FEATURES}  "
           f"changepoint_prior={PROPHET_KW['changepoint_prior_scale']}")
 
