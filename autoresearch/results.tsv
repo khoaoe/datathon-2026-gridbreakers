@@ -12,3 +12,4 @@ b6ae9d1	393772.84	362175.61	495500.35	652014.76	737563.67	keep	exp3: log1p Proph
 f5475e5	375761.38	371025.15	467553.91	643404.67	727047.07	keep	exp3b: log1p Prophet, changepoint_prior_scale=0.2
 cdfaa65	406247.83	383718.33	503191.33	640441.43	715569.70	discard	exp3c: cp=0.3 overfits val (+8.1%), revert to 0.2
 de52ac4	427356.22	429121.35	547828.77	735687.64	767660.97	discard	exp4: drop lag/rolling regresses both (+14%) — lag features still useful
+8d3d521	403339.06	365093.63	497244.40	632955.60	697675.38	discard	exp5: country_holidays=VN regresses val +7%, ext only -1.6%

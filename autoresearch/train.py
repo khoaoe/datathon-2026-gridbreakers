@@ -48,7 +48,7 @@ from modeling.config import LGBM_PARAMS
 # ═════════════════════════════════════════════════════════════════════════════
 # experiment identity — agent updates every experiment
 # ═════════════════════════════════════════════════════════════════════════════
-EXPERIMENT_DESC = "exp5: add Prophet country_holidays=VN"
+EXPERIMENT_DESC = "exp6: more LGBM regularization (num_leaves=31, min_child=40, n_est=5000)"
 
 # Hyperparameters the agent can tweak
 PROPHET_KW = dict(
@@ -60,9 +60,16 @@ PROPHET_KW = dict(
 )
 LOG_PROPHET = True                 # fit Prophet on log1p(target)?
 USE_PROPHET_REGRESSORS = False     # add_regressor: is_promo, is_tet, etc.
-PROPHET_COUNTRY_HOLIDAYS = "VN"    # add Prophet built-in holidays (None/"VN"/"US")
+PROPHET_COUNTRY_HOLIDAYS = None    # add Prophet built-in holidays (None/"VN"/"US")
 DROP_LAG_FEATURES = False          # residual LGBM: drop target lag/rolling?
-LGBM_KW = LGBM_PARAMS.copy()
+LGBM_KW = {
+    **LGBM_PARAMS,
+    "num_leaves": 31,
+    "min_child_samples": 40,
+    "n_estimators": 5000,
+    "learning_rate": 0.02,
+    "reg_lambda": 3.0,
+}
 RUN_EXTRAPOLATION_CHECK = True     # toggle the 2nd val slice (~+60s)
 
 
