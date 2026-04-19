@@ -48,36 +48,20 @@ from modeling.config import LGBM_PARAMS
 # ═════════════════════════════════════════════════════════════════════════════
 # experiment identity — agent updates every experiment
 # ═════════════════════════════════════════════════════════════════════════════
-EXPERIMENT_DESC = "exp26: log1p Prophet cp=0.3 ADDITIVE + simpler LGBM (1000t/31l)"
+EXPERIMENT_DESC = "exp27: exp3b redux (log1p Prophet cp=0.2 mult + DEFAULT LGBM) — Kaggle test"
 
 PROPHET_KW = dict(
     yearly_seasonality=True,
     weekly_seasonality=True,
     daily_seasonality=False,
-    seasonality_mode="additive",
-    changepoint_prior_scale=0.3,    # push cp higher
+    seasonality_mode="multiplicative",
+    changepoint_prior_scale=0.2,
 )
-LOG_PROPHET = True
+LOG_PROPHET = True                 # fit Prophet on log1p(target)
 USE_PROPHET_REGRESSORS = False
 PROPHET_COUNTRY_HOLIDAYS = None
 DROP_LAG_FEATURES = False
-LGBM_KW = {
-    "objective": "regression",
-    "metric": "mae",
-    "boosting_type": "gbdt",
-    "n_estimators": 1000,
-    "learning_rate": 0.05,
-    "max_depth": 6,
-    "num_leaves": 31,
-    "min_child_samples": 50,
-    "subsample": 0.7,
-    "colsample_bytree": 0.7,
-    "reg_alpha": 1.0,
-    "reg_lambda": 5.0,
-    "random_state": 42,
-    "verbose": -1,
-    "n_jobs": -1,
-}
+LGBM_KW = LGBM_PARAMS.copy()      # DEFAULT params from config.py (3000t/63l)
 RUN_EXTRAPOLATION_CHECK = True
 PROPHET_TRAIN_YEARS: float | None = None
 
@@ -303,8 +287,7 @@ def main():
     print(f"[autoresearch] config: log_prophet={LOG_PROPHET}  "
           f"seasonality_mode={PROPHET_KW['seasonality_mode']}  "
           f"changepoint_prior={PROPHET_KW['changepoint_prior_scale']}  "
-          f"lgbm_leaves={LGBM_KW['num_leaves']}  "
-          f"lgbm_trees={LGBM_KW['n_estimators']}")
+          f"lgbm=DEFAULT")
 
     train_fit, val, test = load_splits()
     full_train = pd.concat([train_fit, val], ignore_index=True)
