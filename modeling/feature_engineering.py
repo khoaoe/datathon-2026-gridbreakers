@@ -1,21 +1,106 @@
 """
-Feature engineering v2: all features are computable for ANY date (train or test).
-No features that require same-day auxiliary data (those vanish at prediction time).
+Feature engineering v3: all features are computable for ANY date (train or test).
+No features that require unknown same-day targets at prediction time.
 
-Three categories:
+Four categories:
   1. Calendar + Fourier: known for any date
   2. Target lags + rolling: available via recursive prediction
-  3. Historical patterns: static profiles learned from training data, indexed by
-     day-of-week / month / week-of-year so they apply to future dates too
+  3. Historical patterns: static profiles indexed by calendar keys
+  4. Promotion calendar features: known in advance from promotions table
 """
+
 import numpy as np
 import pandas as pd
 from modeling.config import FILES, LAG_DAYS, ROLLING_WINDOWS
 
 
+def _load_promotions_table():
+    """Load normalized promotions table used by date-based promo features."""
+    try:
+        promos = pd.read_csv(
+            FILES["promotions"],
+            parse_dates=["start_date", "end_date"],
+            usecols=["promo_type", "discount_value", "start_date", "end_date"],
+        )
+    except Exception:
+        return pd.DataFrame(
+            columns=["promo_type", "discount_value", "start_date", "end_date"]
+        )
+
+    promos = promos.dropna(subset=["start_date", "end_date"]).copy()
+    promos["promo_type"] = (
+        promos["promo_type"].fillna("").astype(str).str.lower().str.strip()
+    )
+    promos["discount_value"] = pd.to_numeric(
+        promos["discount_value"], errors="coerce"
+    ).fillna(0.0)
+    return promos.reset_index(drop=True)
+
+
+def _compute_promo_features_for_dates(date_series, promos):
+    """Build promotion features for arbitrary date series."""
+    dates = pd.to_datetime(pd.Series(date_series))
+    out = pd.DataFrame({"Date": np.sort(dates.unique())})
+
+    if out.empty:
+        return out
+
+    out["active_promo_count"] = 0
+    out["active_pct_count"] = 0
+    out["active_fixed_count"] = 0
+    out["active_discount_sum"] = 0.0
+    out["days_to_next_promo_start"] = np.nan
+    out["days_since_last_promo_end"] = np.nan
+
+    if promos is None or promos.empty:
+        out["is_promo_active"] = 0
+        return out
+
+    for _, row in promos.iterrows():
+        mask = (out["Date"] >= row["start_date"]) & (out["Date"] <= row["end_date"])
+        out.loc[mask, "active_promo_count"] += 1
+        out.loc[mask, "active_discount_sum"] += float(row.get("discount_value", 0.0))
+
+        ptype = row.get("promo_type", "")
+        if ptype == "percentage":
+            out.loc[mask, "active_pct_count"] += 1
+        elif ptype == "fixed":
+            out.loc[mask, "active_fixed_count"] += 1
+
+    date_values = out["Date"].values.astype("datetime64[ns]")
+    starts = np.sort(promos["start_date"].dropna().values.astype("datetime64[ns]"))
+    ends = np.sort(promos["end_date"].dropna().values.astype("datetime64[ns]"))
+
+    if len(starts) > 0:
+        next_idx = np.searchsorted(starts, date_values, side="left")
+        has_next = next_idx < len(starts)
+        capped_next_idx = np.minimum(next_idx, len(starts) - 1)
+        next_dates = starts[capped_next_idx]
+        out.loc[has_next, "days_to_next_promo_start"] = (
+            (next_dates[has_next] - date_values[has_next])
+            .astype("timedelta64[D]")
+            .astype(float)
+        )
+
+    if len(ends) > 0:
+        prev_idx = np.searchsorted(ends, date_values, side="right") - 1
+        has_prev = prev_idx >= 0
+        capped_prev_idx = np.maximum(prev_idx, 0)
+        prev_dates = ends[capped_prev_idx]
+        out.loc[has_prev, "days_since_last_promo_end"] = (
+            (date_values[has_prev] - prev_dates[has_prev])
+            .astype("timedelta64[D]")
+            .astype(float)
+        )
+
+    out["is_promo_active"] = (out["active_promo_count"] > 0).astype(int)
+    return out
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 1. Calendar + Fourier (known for any date)
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 def build_calendar_features(df):
     """Time/calendar features from Date column."""
@@ -49,6 +134,7 @@ def build_calendar_features(df):
 # ─────────────────────────────────────────────────────────────────────────────
 # 2. Target lags + rolling (available via recursive prediction)
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 def build_lag_features(df, col="Revenue", lags=None):
     """Lag features for target column."""
@@ -95,6 +181,7 @@ def build_growth_features(df, col="Revenue"):
 #    Computed ONCE from training data, then merged by day-of-week / month / etc.
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def compute_historical_profiles(train_df):
     """
     Compute static profiles from training data.
@@ -112,44 +199,68 @@ def compute_historical_profiles(train_df):
     profiles = {}
 
     # Revenue/COGS by day-of-week
-    profiles["dow"] = df.groupby("dayofweek").agg(
-        rev_dow_mean=("Revenue", "mean"),
-        rev_dow_std=("Revenue", "std"),
-        rev_dow_median=("Revenue", "median"),
-        cogs_dow_mean=("COGS", "mean"),
-    ).reset_index()
+    profiles["dow"] = (
+        df.groupby("dayofweek")
+        .agg(
+            rev_dow_mean=("Revenue", "mean"),
+            rev_dow_std=("Revenue", "std"),
+            rev_dow_median=("Revenue", "median"),
+            cogs_dow_mean=("COGS", "mean"),
+        )
+        .reset_index()
+    )
 
     # Revenue/COGS by month
-    profiles["month"] = df.groupby("month").agg(
-        rev_month_mean=("Revenue", "mean"),
-        rev_month_std=("Revenue", "std"),
-        rev_month_median=("Revenue", "median"),
-        cogs_month_mean=("COGS", "mean"),
-    ).reset_index()
+    profiles["month"] = (
+        df.groupby("month")
+        .agg(
+            rev_month_mean=("Revenue", "mean"),
+            rev_month_std=("Revenue", "std"),
+            rev_month_median=("Revenue", "median"),
+            cogs_month_mean=("COGS", "mean"),
+        )
+        .reset_index()
+    )
 
     # Revenue by week-of-year (captures fine-grained seasonality)
-    profiles["woy"] = df.groupby("weekofyear").agg(
-        rev_woy_mean=("Revenue", "mean"),
-        rev_woy_std=("Revenue", "std"),
-        cogs_woy_mean=("COGS", "mean"),
-    ).reset_index()
+    profiles["woy"] = (
+        df.groupby("weekofyear")
+        .agg(
+            rev_woy_mean=("Revenue", "mean"),
+            rev_woy_std=("Revenue", "std"),
+            cogs_woy_mean=("COGS", "mean"),
+        )
+        .reset_index()
+    )
 
     # Revenue by day-of-month
-    profiles["dom"] = df.groupby("dayofmonth").agg(
-        rev_dom_mean=("Revenue", "mean"),
-        cogs_dom_mean=("COGS", "mean"),
-    ).reset_index()
+    profiles["dom"] = (
+        df.groupby("dayofmonth")
+        .agg(
+            rev_dom_mean=("Revenue", "mean"),
+            cogs_dom_mean=("COGS", "mean"),
+        )
+        .reset_index()
+    )
 
     # Revenue by quarter
-    profiles["quarter"] = df.groupby("quarter").agg(
-        rev_qtr_mean=("Revenue", "mean"),
-        cogs_qtr_mean=("COGS", "mean"),
-    ).reset_index()
+    profiles["quarter"] = (
+        df.groupby("quarter")
+        .agg(
+            rev_qtr_mean=("Revenue", "mean"),
+            cogs_qtr_mean=("COGS", "mean"),
+        )
+        .reset_index()
+    )
 
     # Revenue by (month, dayofweek) — fine-grained seasonal pattern
-    profiles["month_dow"] = df.groupby(["month", "dayofweek"]).agg(
-        rev_month_dow_mean=("Revenue", "mean"),
-    ).reset_index()
+    profiles["month_dow"] = (
+        df.groupby(["month", "dayofweek"])
+        .agg(
+            rev_month_dow_mean=("Revenue", "mean"),
+        )
+        .reset_index()
+    )
 
     return profiles
 
@@ -163,8 +274,11 @@ def compute_aux_profiles():
 
     # ── Orders: average order count & cancel rate by day-of-week and month ──
     try:
-        orders = pd.read_csv(FILES["orders"], parse_dates=["order_date"],
-                             usecols=["order_id", "order_date", "order_status"])
+        orders = pd.read_csv(
+            FILES["orders"],
+            parse_dates=["order_date"],
+            usecols=["order_id", "order_date", "order_status"],
+        )
         orders["dayofweek"] = orders["order_date"].dt.dayofweek
         orders["month"] = orders["order_date"].dt.month
 
@@ -175,31 +289,46 @@ def compute_aux_profiles():
         daily_orders["dayofweek"] = daily_orders.index.dayofweek
         daily_orders["month"] = daily_orders.index.month
 
-        profiles["orders_dow"] = daily_orders.groupby("dayofweek").agg(
-            avg_orders_dow=("order_count", "mean"),
-            avg_cancel_rate_dow=("cancel_rate", "mean"),
-        ).reset_index()
+        profiles["orders_dow"] = (
+            daily_orders.groupby("dayofweek")
+            .agg(
+                avg_orders_dow=("order_count", "mean"),
+                avg_cancel_rate_dow=("cancel_rate", "mean"),
+            )
+            .reset_index()
+        )
 
-        profiles["orders_month"] = daily_orders.groupby("month").agg(
-            avg_orders_month=("order_count", "mean"),
-            avg_cancel_rate_month=("cancel_rate", "mean"),
-        ).reset_index()
+        profiles["orders_month"] = (
+            daily_orders.groupby("month")
+            .agg(
+                avg_orders_month=("order_count", "mean"),
+                avg_cancel_rate_month=("cancel_rate", "mean"),
+            )
+            .reset_index()
+        )
     except Exception as e:
         print(f"  Warning: could not process orders — {e}")
 
     # ── Returns: return rate pattern by month ──
     try:
-        returns = pd.read_csv(FILES["returns"], parse_dates=["return_date"],
-                              usecols=["return_id", "return_date", "refund_amount"])
+        returns = pd.read_csv(
+            FILES["returns"],
+            parse_dates=["return_date"],
+            usecols=["return_id", "return_date", "refund_amount"],
+        )
         daily_returns = returns.groupby("return_date").agg(
             return_count=("return_id", "count"),
             avg_refund=("refund_amount", "mean"),
         )
         daily_returns["month"] = daily_returns.index.month
-        profiles["returns_month"] = daily_returns.groupby("month").agg(
-            avg_returns_month=("return_count", "mean"),
-            avg_refund_month=("avg_refund", "mean"),
-        ).reset_index()
+        profiles["returns_month"] = (
+            daily_returns.groupby("month")
+            .agg(
+                avg_returns_month=("return_count", "mean"),
+                avg_refund_month=("avg_refund", "mean"),
+            )
+            .reset_index()
+        )
     except Exception as e:
         print(f"  Warning: could not process returns — {e}")
 
@@ -214,25 +343,37 @@ def compute_aux_profiles():
         daily_wt["dayofweek"] = daily_wt.index.dayofweek
         daily_wt["month"] = daily_wt.index.month
 
-        profiles["traffic_dow"] = daily_wt.groupby("dayofweek").agg(
-            avg_sessions_dow=("total_sessions", "mean"),
-            avg_visitors_dow=("total_visitors", "mean"),
-        ).reset_index()
+        profiles["traffic_dow"] = (
+            daily_wt.groupby("dayofweek")
+            .agg(
+                avg_sessions_dow=("total_sessions", "mean"),
+                avg_visitors_dow=("total_visitors", "mean"),
+            )
+            .reset_index()
+        )
 
-        profiles["traffic_month"] = daily_wt.groupby("month").agg(
-            avg_sessions_month=("total_sessions", "mean"),
-            avg_bounce_month=("avg_bounce", "mean"),
-        ).reset_index()
+        profiles["traffic_month"] = (
+            daily_wt.groupby("month")
+            .agg(
+                avg_sessions_month=("total_sessions", "mean"),
+                avg_bounce_month=("avg_bounce", "mean"),
+            )
+            .reset_index()
+        )
     except Exception as e:
         print(f"  Warning: could not process web_traffic — {e}")
 
     # ── Promotions: count of active promos by month ──
     try:
-        promos = pd.read_csv(FILES["promotions"], parse_dates=["start_date", "end_date"])
+        promos = pd.read_csv(
+            FILES["promotions"], parse_dates=["start_date", "end_date"]
+        )
         promo_months = []
         for m in range(1, 13):
-            active = promos[(promos["start_date"].dt.month <= m) &
-                            (promos["end_date"].dt.month >= m)]
+            active = promos[
+                (promos["start_date"].dt.month <= m)
+                & (promos["end_date"].dt.month >= m)
+            ]
             promo_months.append({"month": m, "avg_promos_month": len(active) / 10})
         profiles["promos_month"] = pd.DataFrame(promo_months)
     except Exception as e:
@@ -240,13 +381,19 @@ def compute_aux_profiles():
 
     # ── Inventory: avg stockout rate by month ──
     try:
-        inv = pd.read_csv(FILES["inventory"], usecols=["month", "stockout_flag",
-                          "sell_through_rate", "fill_rate"])
-        profiles["inv_month"] = inv.groupby("month").agg(
-            avg_stockout_rate_month=("stockout_flag", "mean"),
-            avg_sell_through_month=("sell_through_rate", "mean"),
-            avg_fill_rate_month=("fill_rate", "mean"),
-        ).reset_index()
+        inv = pd.read_csv(
+            FILES["inventory"],
+            usecols=["month", "stockout_flag", "sell_through_rate", "fill_rate"],
+        )
+        profiles["inv_month"] = (
+            inv.groupby("month")
+            .agg(
+                avg_stockout_rate_month=("stockout_flag", "mean"),
+                avg_sell_through_month=("sell_through_rate", "mean"),
+                avg_fill_rate_month=("fill_rate", "mean"),
+            )
+            .reset_index()
+        )
     except Exception as e:
         print(f"  Warning: could not process inventory — {e}")
 
@@ -263,7 +410,7 @@ def merge_profiles(df, profiles, merge_key, prefix=""):
     return df.merge(profiles, on=merge_key, how="left")
 
 
-def build_feature_table(train_df, verbose=True):
+def build_feature_table(train_df, verbose=True, profile_source_df=None):
     """
     Build full feature table. ALL features are computable for any date.
 
@@ -271,6 +418,9 @@ def build_feature_table(train_df, verbose=True):
     ----------
     train_df : DataFrame with Date, Revenue, COGS (training data).
     verbose : bool, print progress.
+    profile_source_df : optional DataFrame used to compute calendar profiles.
+        If None, defaults to train_df. For leakage-safe validation, pass only
+        pre-validation rows here.
 
     Returns
     -------
@@ -278,10 +428,18 @@ def build_feature_table(train_df, verbose=True):
     profiles : dict of profile DataFrames (needed for test prediction)
     """
     df = train_df.copy().sort_values("Date").reset_index(drop=True)
+    profile_source = train_df if profile_source_df is None else profile_source_df
+    profile_source = profile_source.copy().sort_values("Date").reset_index(drop=True)
 
     if verbose:
         print("  Calendar + Fourier features...")
     df = build_calendar_features(df)
+
+    if verbose:
+        print("  Promotion calendar features...")
+    promotions = _load_promotions_table()
+    promo_features = _compute_promo_features_for_dates(df["Date"], promotions)
+    df = df.merge(promo_features, on="Date", how="left")
 
     if verbose:
         print("  Lag features...")
@@ -299,7 +457,7 @@ def build_feature_table(train_df, verbose=True):
 
     if verbose:
         print("  Historical revenue profiles...")
-    rev_profiles = compute_historical_profiles(train_df)
+    rev_profiles = compute_historical_profiles(profile_source)
     df = merge_profiles(df, rev_profiles["dow"], "dayofweek")
     df = merge_profiles(df, rev_profiles["month"], "month")
     df = merge_profiles(df, rev_profiles["woy"], "weekofyear")
@@ -316,7 +474,7 @@ def build_feature_table(train_df, verbose=True):
             df = merge_profiles(df, prof, key_col)
 
     # Combine all profiles for reuse at prediction time
-    all_profiles = {**rev_profiles, **aux_profiles}
+    all_profiles = {"__promotions__": promotions, **rev_profiles, **aux_profiles}
 
     if verbose:
         print(f"  Feature table: {df.shape[0]} rows × {df.shape[1]} cols")
@@ -330,14 +488,43 @@ def apply_profiles_to_dates(dates_df, profiles):
     Used during prediction to get the same profile features.
     """
     df = dates_df.copy()
+
+    # Promo features are known in advance and can be recomputed for any date.
+    promotions = profiles.get("__promotions__") if isinstance(profiles, dict) else None
+    if promotions is not None:
+        promo_features = _compute_promo_features_for_dates(df["Date"], promotions)
+        df = df.merge(promo_features, on="Date", how="left")
+
+    profile_merge_keys = {
+        "dow": "dayofweek",
+        "month": "month",
+        "woy": "weekofyear",
+        "dom": "dayofmonth",
+        "quarter": "quarter",
+        "month_dow": ["month", "dayofweek"],
+        "orders_dow": "dayofweek",
+        "orders_month": "month",
+        "returns_month": "month",
+        "traffic_dow": "dayofweek",
+        "traffic_month": "month",
+        "promos_month": "month",
+        "inv_month": "month",
+    }
+
     for name, prof in profiles.items():
-        key_cols = [c for c in prof.columns if c in df.columns and
-                    c not in prof.select_dtypes(include=[np.number]).columns.tolist() + [c for c in prof.columns if c.startswith(("rev_", "cogs_", "avg_", "active_"))]]
-        # Simpler: find merge keys (non-metric columns)
-        metric_cols = [c for c in prof.columns if any(c.startswith(p) for p in
-                       ["rev_", "cogs_", "avg_", "active_"])]
-        key_cols = [c for c in prof.columns if c not in metric_cols]
-        key_cols = [c for c in key_cols if c in df.columns]
+        if name.startswith("__"):
+            continue
+
+        key_cols = profile_merge_keys.get(name)
+        if key_cols is None:
+            # Fallback: use non-numeric cols as keys.
+            numeric_cols = prof.select_dtypes(include=[np.number]).columns.tolist()
+            key_cols = [c for c in prof.columns if c not in numeric_cols]
+
+        if isinstance(key_cols, str):
+            key_cols = [key_cols]
+
+        key_cols = [c for c in key_cols if c in df.columns and c in prof.columns]
         if key_cols:
             df = df.merge(prof, on=key_cols, how="left")
     return df

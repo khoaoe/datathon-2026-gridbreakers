@@ -1,7 +1,7 @@
 {
   "experiment": "ex_02_prophet",
-  "timestamp": "2026-04-18T12:18:35.867314",
-  "elapsed_sec": 202.1,
+  "timestamp": "2026-04-20T12:59:59.207092",
+  "elapsed_sec": 124.2,
   "params": {
     "seasonality_mode": "multiplicative",
     "changepoint_prior_scale": 0.05

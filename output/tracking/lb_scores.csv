@@ -1,0 +1,2 @@
+date,experiment,submission_file,public_lb_mae,branch,notes
+2026-04-20,ex_03_lgbm,ex_03_lgbm.csv,889940.36974,feature-engineering,"v3 promo calendar + leakage-safe profile source"

@@ -1,8 +1,9 @@
 """
-EX_04: XGBoost with v2 Feature Engineering (GPU accelerated)
-- Same v2 features as EX_03 (all available at prediction time)
+EX_04: XGBoost with v3 Feature Engineering (GPU accelerated)
+- Same v3 features as EX_03 (all available at prediction time)
 - XGBoost with GPU (tree_method=hist, device=cuda)
 """
+
 import sys
 import time
 import warnings
@@ -13,11 +14,11 @@ import pandas as pd
 warnings.filterwarnings("ignore")
 sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent.parent))
 
-from modeling.config import (XGB_PARAMS, MODEL_DIR, SUBMISSION_DIR,
-                              VAL_START, SEED)
+from modeling.config import XGB_PARAMS, MODEL_DIR, SUBMISSION_DIR, VAL_START, SEED
 from modeling.utils import evaluate, load_sales, make_submission
 from modeling.feature_engineering import (
-    build_feature_table, get_feature_cols,
+    build_feature_table,
+    get_feature_cols,
 )
 from modeling.ex_03_lgbm import recursive_predict
 from modeling.tracker import ExperimentTracker
@@ -36,12 +37,17 @@ def main():
     tracker = ExperimentTracker("ex_04_xgb")
 
     print("=" * 60)
-    print("EX_04: XGBoost + GPU + v2 FEATURES")
+    print("EX_04: XGBoost + GPU + v3 FEATURES")
     print("=" * 60)
 
     # ── Build feature table ──────────────────────────────────────────
     print("\n[1/4] Building features...")
-    feat_df, profiles = build_feature_table(train, verbose=True)
+    profile_source = train[train["Date"] < pd.Timestamp(VAL_START)].copy()
+    feat_df, profiles = build_feature_table(
+        train,
+        verbose=True,
+        profile_source_df=profile_source,
+    )
 
     # ── Train/Val split ──────────────────────────────────────────────
     print("\n[2/4] Splitting train/val...")
@@ -74,12 +80,13 @@ def main():
     print("\n[3/4] Training Revenue model...")
     model_rev = xgb.XGBRegressor(**params)
     model_rev.fit(
-        X_trn, y_trn,
+        X_trn,
+        y_trn,
         eval_set=[(X_trn, y_trn), (X_val, y_val)],
         verbose=200,
     )
     # Log evals
-    if hasattr(model_rev, 'evals_result_'):
+    if hasattr(model_rev, "evals_result_"):
         results = model_rev.evals_result()
         for ds_name in results:
             for metric_name in results[ds_name]:
@@ -97,7 +104,8 @@ def main():
 
     model_cogs = xgb.XGBRegressor(**params)
     model_cogs.fit(
-        X_trn_cogs, y_trn_cogs,
+        X_trn_cogs,
+        y_trn_cogs,
         eval_set=[(X_val_cogs, y_val_cogs)],
         verbose=200,
     )
@@ -114,7 +122,11 @@ def main():
 
     # ── Submission ───────────────────────────────────────────────────
     print("\n[4/4] Generating submission...")
-    full_df, full_profiles = build_feature_table(train, verbose=False)
+    full_df, full_profiles = build_feature_table(
+        train,
+        verbose=False,
+        profile_source_df=train,
+    )
     full_feature_cols = [c for c in feature_cols if c in full_df.columns]
     X_full = full_df[full_feature_cols].fillna(0)
 
@@ -124,17 +136,32 @@ def main():
     model_cogs_full = xgb.XGBRegressor(**params)
     model_cogs_full.fit(X_full, full_df["COGS"])
 
-    rev_preds = recursive_predict(model_rev_full, train, test["Date"].values,
-                                  full_feature_cols, full_profiles, "Revenue")
-    cogs_preds = recursive_predict(model_cogs_full, train, test["Date"].values,
-                                   full_feature_cols, full_profiles, "COGS")
+    rev_preds = recursive_predict(
+        model_rev_full,
+        train,
+        test["Date"].values,
+        full_feature_cols,
+        full_profiles,
+        "Revenue",
+    )
+    cogs_preds = recursive_predict(
+        model_cogs_full,
+        train,
+        test["Date"].values,
+        full_feature_cols,
+        full_profiles,
+        "COGS",
+    )
 
-    make_submission(test["Date"], rev_preds, cogs_preds,
-                    SUBMISSION_DIR / "ex_04_xgb.csv")
+    make_submission(
+        test["Date"], rev_preds, cogs_preds, SUBMISSION_DIR / "ex_04_xgb.csv"
+    )
 
     # ── Save tracking ────────────────────────────────────────────────
     tracker.log_final(res_rev)
-    tracker.add_note(f"COGS — MAE={res_cogs['mae']:,.0f} RMSE={res_cogs['rmse']:,.0f} R²={res_cogs['r2']:.4f}")
+    tracker.add_note(
+        f"COGS — MAE={res_cogs['mae']:,.0f} RMSE={res_cogs['rmse']:,.0f} R²={res_cogs['r2']:.4f}"
+    )
     tracker.save()
 
     elapsed = time.time() - start

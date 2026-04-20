@@ -1,7 +1,7 @@
 {
   "experiment": "ex_04_xgb",
-  "timestamp": "2026-04-18T12:22:14.532218",
-  "elapsed_sec": 259.2,
+  "timestamp": "2026-04-20T13:36:14.981740",
+  "elapsed_sec": 356.5,
   "params": {
     "objective": "reg:squarederror",
     "eval_metric": "mae",
@@ -19,13 +19,13 @@
     "device": "cuda",
     "verbosity": 0,
     "n_jobs": -1,
-    "n_features": 140
+    "n_features": 153
   },
   "final_scores": {
-    "mae": 561299.5673424657,
-    "rmse": 751297.009478147,
-    "r2": 0.7985296920121355
+    "mae": 564143.5575068493,
+    "rmse": 753616.1302068819,
+    "r2": 0.7972839660321182
   },
   "total_steps": 120,
-  "notes": "COGS \u2014 MAE=465,862 RMSE=628,484 R\u00b2=0.8143\n"
+  "notes": "COGS \u2014 MAE=474,070 RMSE=641,755 R\u00b2=0.8064\n"
 }

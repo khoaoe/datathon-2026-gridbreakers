@@ -6,10 +6,11 @@
 |---|---|---|---|---|---|---|---|---|
 | 01 | Naive Baseline | `[x]` | 837,704 | 1,161,819 | 0.5182 | 1,247,026 | 0.1s | Seasonal naive (best of 3) |
 | 02 | Prophet | `[x]` | — | — | — | 1,393,459 | — | Multiplicative seasonality + holidays |
-| 03 | LightGBM (v2) | `[x]` | 560,163 | 753,596 | 0.7973 | **973,611** | 99s | v2 features + profiles |
+| 03 | LightGBM (v2) | `[x]` | 560,163 | 753,596 | 0.7973 | 973,611 | 99s | v2 features + profiles |
 | 04 | XGBoost (GPU) | `[x]` | — | — | — | 1,040,223 | — | v2 features + CUDA |
 | 05 | N-HiTS | `[x]` | 557,578 | 765,589 | 0.7570 | 1,287,946 | 50s | Deep learning, neuralforecast |
-| 06 | Ensemble | `[x]` | — | — | — | **898,680** | — | Weighted avg of best models (Simple Avg: 976,579) |
+| 06 | Ensemble | `[x]` | — | — | — | 898,680 | — | Weighted avg of best models (Simple Avg: 976,579) |
+| 07 | LightGBM (v3) | `[x]` | 556,865 | 753,564 | 0.7973 | **889,940.370** | 180s | promo calendar + leakage-safe profile source |
 
 ## How to Run
 
@@ -31,7 +32,7 @@ All submission CSVs are saved to `output/submissions/`.
 |---|---|---|---|
 | 01 | `ex_01_naive.csv` | 548 | `[x]` |
 | 02 | `ex_02_prophet.csv` | 548 | `[ ]` |
-| 03 | `ex_03_lgbm.csv` | 548 | `[ ]` |
+| 03 | `ex_03_lgbm.csv` | 548 | `[x]` |
 | 04 | `ex_04_xgb.csv` | 548 | `[ ]` |
 | 05 | `ex_05_nhits.csv` | 548 | `[ ]` |
 | 06 | `ex_06_ensemble_avg.csv` | 548 | `[ ]` |
@@ -50,3 +51,4 @@ pip install pandas numpy scikit-learn lightgbm xgboost prophet shap neuralforeca
 - EX_03 and EX_04 use recursive prediction (predict day-by-day, updating lags)
 - EX_05 uses direct multi-step prediction (N-HiTS predicts all 548 days at once)
 - SHAP values saved for EX_03 in `output/models/ex_03_shap_importance.csv`
+- Public LB update (2026-04-20): `ex_03_lgbm.csv` scored `889,940.36974`
