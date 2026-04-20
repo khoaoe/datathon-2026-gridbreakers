@@ -1,0 +1,11 @@
+{
+  "n_folds": 5,
+  "n_methods": 8,
+  "n_records": 40,
+  "best_method": "core_plus_promo_interactions",
+  "log_path": "/home/pineapple/Desktop/projects/datathon-2026-gridbreakers/output/tracking/ex_08_feature_engineering_research/fold_log.csv",
+  "summary_path": "/home/pineapple/Desktop/projects/datathon-2026-gridbreakers/output/tracking/ex_08_feature_engineering_research/method_summary.csv",
+  "notes_path": "/home/pineapple/Desktop/projects/datathon-2026-gridbreakers/output/tracking/ex_08_feature_engineering_research/notes.md",
+  "importance_path": "/home/pineapple/Desktop/projects/datathon-2026-gridbreakers/output/tracking/ex_08_feature_engineering_research/feature_importance_by_method.csv",
+  "best_importance_path": "/home/pineapple/Desktop/projects/datathon-2026-gridbreakers/output/tracking/ex_08_feature_engineering_research/best_method_top_features.csv"
+}

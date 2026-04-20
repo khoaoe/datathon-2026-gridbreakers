@@ -1,7 +1,7 @@
 {
   "experiment": "ex_03_lgbm",
-  "timestamp": "2026-04-20T13:30:05.677606",
-  "elapsed_sec": 192.9,
+  "timestamp": "2026-04-20T16:14:38.730289",
+  "elapsed_sec": 213.6,
   "params": {
     "objective": "regression",
     "metric": "mae",
@@ -18,15 +18,15 @@
     "random_state": 42,
     "verbose": -1,
     "n_jobs": -1,
-    "n_features": 153,
+    "n_features": 152,
     "n_train": 3468,
     "n_val": 365
   },
   "final_scores": {
-    "mae": 557892.8616209644,
-    "rmse": 744930.3574532057,
-    "r2": 0.8019298291813163
+    "mae": 547840.4618447119,
+    "rmse": 741094.7186626535,
+    "r2": 0.8039643004929278
   },
   "total_steps": 6,
-  "notes": "COGS \u2014 MAE=470,527 RMSE=647,901 R\u00b2=0.8027\n"
+  "notes": "COGS \u2014 MAE=475,804 RMSE=646,761 R\u00b2=0.8034\n"
 }

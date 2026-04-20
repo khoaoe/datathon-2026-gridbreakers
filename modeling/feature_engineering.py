@@ -97,6 +97,34 @@ def _compute_promo_features_for_dates(date_series, promos):
     return out
 
 
+def add_promo_interaction_features(df):
+    """Add richer promo interaction features that remain known for future dates."""
+    out = df.copy()
+
+    required_defaults = {
+        "active_promo_count": 0.0,
+        "active_discount_sum": 0.0,
+        "is_weekend": 0.0,
+        "is_month_end": 0.0,
+        "dayofweek": 0.0,
+        "days_to_next_promo_start": np.nan,
+        "days_since_last_promo_end": np.nan,
+    }
+    for col, default in required_defaults.items():
+        if col not in out.columns:
+            out[col] = default
+
+    out["promo_discount_per_active"] = out["active_discount_sum"] / out[
+        "active_promo_count"
+    ].replace(0, np.nan)
+    out["promo_weekend_discount"] = out["active_discount_sum"] * out["is_weekend"]
+    out["promo_monthend_discount"] = out["active_discount_sum"] * out["is_month_end"]
+    out["promo_dow_pressure"] = out["active_promo_count"] * (out["dayofweek"] + 1)
+    out["next_promo_7d"] = out["days_to_next_promo_start"].between(0, 7).astype(int)
+    out["after_promo_7d"] = out["days_since_last_promo_end"].between(0, 7).astype(int)
+    return out
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 1. Calendar + Fourier (known for any date)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -440,6 +468,7 @@ def build_feature_table(train_df, verbose=True, profile_source_df=None):
     promotions = _load_promotions_table()
     promo_features = _compute_promo_features_for_dates(df["Date"], promotions)
     df = df.merge(promo_features, on="Date", how="left")
+    df = add_promo_interaction_features(df)
 
     if verbose:
         print("  Lag features...")
@@ -494,6 +523,7 @@ def apply_profiles_to_dates(dates_df, profiles):
     if promotions is not None:
         promo_features = _compute_promo_features_for_dates(df["Date"], promotions)
         df = df.merge(promo_features, on="Date", how="left")
+        df = add_promo_interaction_features(df)
 
     profile_merge_keys = {
         "dow": "dayofweek",
