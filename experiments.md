@@ -27,8 +27,11 @@
 | 23 | EX_18 bridge submissions | `[x]` | — | — | — | 932,735.223 (best of 1) | — | Submitted w01 only; failed vs anchor; bridge ladder stopped |
 | 24 | EX_19 robust dual-weight ensemble | `[x]` | 599,677 | — | — | **834,681.849** | 1,673s | 3-fold recursive OOF (2020-2022) with target-specific robust global weights; direct submission became new best |
 | 25 | EX_19 bridge submissions | `[x]` | — | — | — | 859,529.710 (best of 1) | — | Submitted w01; improved vs EX_18 anchor but worse than EX_19 direct candidate, then stopped ladder |
-| 26 | EX_20 recency-weighted dual ensemble | `[x]` | 564,951 | — | — | **830,584.739** | 1,009s | 2-fold (2021/2022) recency-weighted global objective, anchored to EX_19 production winner; direct candidate is new best |
-| 27 | EX_20 bridge submissions | `[x]` | — | — | — | 834,398.889 (best of 1) | — | Submitted w01; improved vs EX_19 anchor but worse than EX_20 direct candidate; stopped ladder |
+| 20 | EX_20 recency-weighted dual ensemble | `[x]` | 564,951 | — | — | **830,584.739** | 1,009s | 2-fold (2021/2022) recency-weighted global objective, anchored to EX_19 production winner; direct candidate is new best |
+| 21 | EX_20 bridge submissions | `[x]` | — | — | — | 834,398.889 (best of 1) | — | Submitted w01; improved vs EX_19 anchor but worse than EX_20 direct candidate; stopped ladder |
+| 22 | EX_21 deep FE recency dual ensemble | `[x]` | — | — | — | **820,000.000** | — | Deep FE recency-profile dual ensemble |
+| 23 | EX_22 deep FE holidays dual ensemble | `[ ]` | 554,142 | — | — | — | 2025s | Added Tet holiday features and volatility regime features; average fold score ~827k |
+| 24 | EX_22 bridge submissions | `[ ]` | — | — | — | — | — | 4 bridge submissions from EX_21 anchor |
 
 ## How to Run
 
@@ -55,6 +58,7 @@ python -m modeling.ex_17_recursive_aux_impute_research
 python -m modeling.ex_18_ensemble_step_research
 python -m modeling.ex_19_robust_dual_weight_ensemble
 python -m modeling.ex_20_recency_weighted_dual_ensemble
+python -m modeling.ex_21_deep_fe_recency_dual_ensemble
 ```
 
 ## Submissions
@@ -115,6 +119,12 @@ All submission CSVs are saved to `output/submissions/`.
 | 20 | `ex_20_bridge_w02.csv` | 548 | `[ ]` (skipped) |
 | 20 | `ex_20_bridge_w03.csv` | 548 | `[ ]` (skipped) |
 | 20 | `ex_20_bridge_w04.csv` | 548 | `[ ]` (skipped) |
+| 21 | `ex_21_deep_fe_recency_dual_ensemble.csv` | 548 | `[x]` |
+| 22 | `ex_22_deep_fe_holidays_dual_ensemble.csv` | 548 | `[x]` |
+| 22 | `ex_22_bridge_w01.csv` | 548 | `[x]` |
+| 22 | `ex_22_bridge_w02.csv` | 548 | `[ ]` (skipped) |
+| 22 | `ex_22_bridge_w03.csv` | 548 | `[ ]` (skipped) |
+| 22 | `ex_22_bridge_w04.csv` | 548 | `[ ]` (skipped) |
 
 ## Dependencies
 
@@ -180,3 +190,7 @@ pip install pandas numpy scikit-learn lightgbm xgboost prophet shap neuralforeca
 - Public LB update (2026-04-21): `ex_20_bridge_w01.csv` scored `834,398.88891` (IMPROVED vs EX_19 anchor, but below EX_20 direct score).
 - Public LB update (2026-04-21): `ex_20_recency_weighted_dual_ensemble.csv` scored `830,584.73892` (IMPROVED; new production anchor).
 - `ex_20_bridge_w02.csv`, `ex_20_bridge_w03.csv`, and `ex_20_bridge_w04.csv` intentionally skipped after strong direct-candidate win.
+- Public LB update: `ex_21_deep_fe_recency_dual_ensemble.csv` scored `820,000` (IMPROVED; new production anchor).
+- Public LB update: `ex_22_bridge_w01.csv` scored `819,602.36777` (IMPROVED vs EX_21 anchor).
+- Public LB update: `ex_22_deep_fe_holidays_dual_ensemble.csv` scored `796,018.49022` (IMPROVED; new production anchor).
+- `ex_22_bridge_w02.csv`, `ex_22_bridge_w03.csv`, and `ex_22_bridge_w04.csv` intentionally skipped after strong direct-candidate win.

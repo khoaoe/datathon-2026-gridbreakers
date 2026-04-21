@@ -156,6 +156,50 @@ def build_calendar_features(df):
 
     # Trend: days since start (linear trend feature)
     df["trend"] = (d - d.min()).dt.days
+
+    # Holidays
+    df["is_national_holiday"] = (
+        ((df["month"] == 9) & (df["dayofmonth"] == 2)) |
+        ((df["month"] == 4) & (df["dayofmonth"] == 30)) |
+        ((df["month"] == 5) & (df["dayofmonth"] == 1))
+    ).astype(int)
+
+    TET_DATES = [
+        "2012-01-23", "2013-02-10", "2014-01-31", "2015-02-19",
+        "2016-02-08", "2017-01-28", "2018-02-16", "2019-02-05",
+        "2020-01-25", "2021-02-12", "2022-02-01", "2023-01-22",
+        "2024-02-10", "2025-01-29"
+    ]
+    tet_dates = pd.to_datetime(TET_DATES)
+    
+    df["days_to_tet"] = np.nan
+    df["days_since_tet"] = np.nan
+    
+    dvals = d.values.astype("datetime64[ns]")
+    starts = tet_dates.values.astype("datetime64[ns]")
+    
+    next_idx = np.searchsorted(starts, dvals, side="left")
+    has_next = next_idx < len(starts)
+    capped_next_idx = np.minimum(next_idx, len(starts) - 1)
+    next_dates = starts[capped_next_idx]
+    df.loc[has_next, "days_to_tet"] = (
+        (next_dates[has_next] - dvals[has_next])
+        .astype("timedelta64[D]")
+        .astype(float)
+    )
+    
+    prev_idx = np.searchsorted(starts, dvals, side="right") - 1
+    has_prev = prev_idx >= 0
+    capped_prev_idx = np.maximum(prev_idx, 0)
+    prev_dates = starts[capped_prev_idx]
+    df.loc[has_prev, "days_since_tet"] = (
+        (dvals[has_prev] - prev_dates[has_prev])
+        .astype("timedelta64[D]")
+        .astype(float)
+    )
+    
+    df["is_tet_week"] = ((df["days_to_tet"] <= 3) | (df["days_since_tet"] <= 4)).astype(int)
+
     return df
 
 
@@ -201,6 +245,25 @@ def build_growth_features(df, col="Revenue"):
     # Diff features
     df[f"{col}_diff_1"] = df[col].shift(1) - df[col].shift(2)
     df[f"{col}_diff_7"] = df[col].shift(1) - df[col].shift(8)
+
+    # Regime / Volatility features
+    col_l1 = df[col].shift(1)
+    col_mean_28 = col_l1.rolling(28, min_periods=7).mean()
+    col_std_28 = col_l1.rolling(28, min_periods=7).std()
+    
+    df[f"{col}_vol_14"] = col_l1.rolling(14, min_periods=4).std()
+    df[f"{col}_vol_28"] = col_std_28
+    df[f"{col}_trend_7_28"] = col_l1.rolling(7, min_periods=3).mean() / col_mean_28.replace(0, np.nan)
+    df[f"{col}_zscore_28"] = (col_l1 - col_mean_28) / col_std_28.replace(0, np.nan)
+
+    # Cross-target features if applicable
+    if col == "Revenue" and "COGS" in df.columns:
+        cogs_l1 = df["COGS"].shift(1)
+        cogs_mean_28 = cogs_l1.rolling(28, min_periods=7).mean()
+        df["cogs_trend_7_28"] = cogs_l1.rolling(7, min_periods=3).mean() / cogs_mean_28.replace(0, np.nan)
+        df["rev_cogs_spread_lag1"] = col_l1 - cogs_l1
+        df["rev_cogs_ratio_lag1"] = col_l1 / cogs_l1.replace(0, np.nan)
+
     return df
 
 
@@ -529,6 +592,10 @@ def apply_profiles_to_dates(dates_df, profiles):
         "dow": "dayofweek",
         "month": "month",
         "woy": "weekofyear",
+        "rec_dow": "dayofweek",
+        "rec_month": "month",
+        "rec_woy": "weekofyear",
+        "rec_month_dow": ["month", "dayofweek"],
         "dom": "dayofmonth",
         "quarter": "quarter",
         "month_dow": ["month", "dayofweek"],
