@@ -1,7 +1,7 @@
 {
   "experiment": "ex_03_lgbm_cogs",
-  "timestamp": "2026-04-20T16:14:38.951175",
-  "elapsed_sec": 210.6,
+  "timestamp": "2026-04-20T17:17:53.989670",
+  "elapsed_sec": 181.3,
   "params": {},
   "final_scores": {
     "mae": 475803.6383243418,

@@ -17,6 +17,7 @@ Outputs:
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass
 
 import numpy as np
@@ -35,6 +36,36 @@ from modeling.utils import load_sales
 
 
 TRACK_DIR = OUTPUT_DIR / "tracking" / "ex_08_feature_engineering_research"
+TRACK_DIR.mkdir(parents=True, exist_ok=True)
+
+RUN_MODE = os.getenv("EX08_MODE", "strict").strip().lower()
+
+if RUN_MODE == "quick":
+    TRACK_DIR = OUTPUT_DIR / "tracking" / "ex_08_feature_engineering_research_quick"
+    STRICT_N_SPLITS = 2
+    STRICT_VAL_DAYS = 180
+    STRICT_MIN_TRAIN_DAYS = 2555
+    LGBM_ESTIMATORS = 250
+    HGB_MAX_ITER = 250
+    STABLE_IMPROVE_RATIO = 0.50
+    MAX_STABLE_WORST_DELTA = 12000.0
+    QUICK_METHOD_NAMES = {
+        "baseline_v3_core",
+        "core_plus_promo_interactions",
+        "core_plus_selected_aux_lags",
+        "core_plus_regime_features",
+    }
+else:
+    TRACK_DIR = OUTPUT_DIR / "tracking" / "ex_08_feature_engineering_research"
+    STRICT_N_SPLITS = 4
+    STRICT_VAL_DAYS = 365
+    STRICT_MIN_TRAIN_DAYS = 2190
+    LGBM_ESTIMATORS = 900
+    HGB_MAX_ITER = 700
+    STABLE_IMPROVE_RATIO = 0.75
+    MAX_STABLE_WORST_DELTA = 6000.0
+    QUICK_METHOD_NAMES = None
+
 TRACK_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -168,9 +199,15 @@ def build_aux_daily_lag_features(date_index: pd.Series) -> pd.DataFrame:
         avg_session_duration_sec=("avg_session_duration_sec", "mean"),
     )
 
-    out = out.merge(ord_daily.rename(columns={"order_date": "Date"}), on="Date", how="left")
-    out = out.merge(ret_daily.rename(columns={"return_date": "Date"}), on="Date", how="left")
-    out = out.merge(ship_daily.rename(columns={"ship_date": "Date"}), on="Date", how="left")
+    out = out.merge(
+        ord_daily.rename(columns={"order_date": "Date"}), on="Date", how="left"
+    )
+    out = out.merge(
+        ret_daily.rename(columns={"return_date": "Date"}), on="Date", how="left"
+    )
+    out = out.merge(
+        ship_daily.rename(columns={"ship_date": "Date"}), on="Date", how="left"
+    )
     out = out.merge(web_daily.rename(columns={"date": "Date"}), on="Date", how="left")
 
     raw_aux = [c for c in out.columns if c != "Date"]
@@ -271,7 +308,9 @@ def make_recency_profiles(
     }
 
 
-def apply_profiles(frame: pd.DataFrame, profiles: dict[str, pd.DataFrame]) -> pd.DataFrame:
+def apply_profiles(
+    frame: pd.DataFrame, profiles: dict[str, pd.DataFrame]
+) -> pd.DataFrame:
     df = frame.copy()
     if "dow" in profiles:
         df = df.merge(profiles["dow"], on=["dayofweek"], how="left")
@@ -337,7 +376,7 @@ def fit_predict_model(
             objective="regression",
             metric="mae",
             boosting_type="gbdt",
-            n_estimators=900,
+            n_estimators=LGBM_ESTIMATORS,
             learning_rate=0.03,
             max_depth=8,
             num_leaves=63,
@@ -357,7 +396,7 @@ def fit_predict_model(
         model = HistGradientBoostingRegressor(
             learning_rate=0.05,
             max_depth=8,
-            max_iter=700,
+            max_iter=HGB_MAX_ITER,
             l2_regularization=0.1,
             random_state=SEED,
         )
@@ -431,6 +470,7 @@ def evaluate_fold(
 def main() -> None:
     print("=" * 78)
     print("EX_08: DEEPER FEATURE ENGINEERING RESEARCH (TIME-SERIES K-FOLD)")
+    print(f"RUN MODE: {RUN_MODE}")
     print("=" * 78)
 
     sales, _ = load_sales()
@@ -500,7 +540,12 @@ def main() -> None:
     regime_cols = [c for c in regime_cols if c in data.columns]
 
     print("[2/5] Building expanding time-series folds...")
-    folds = make_expanding_time_folds(data["Date"], n_splits=5, val_days=365)
+    folds = make_expanding_time_folds(
+        data["Date"],
+        n_splits=STRICT_N_SPLITS,
+        val_days=STRICT_VAL_DAYS,
+        min_train_days=STRICT_MIN_TRAIN_DAYS,
+    )
     for f in folds:
         print(
             f"  {f.name}: train<= {f.train_end} ({f.train_days}d), "
@@ -528,48 +573,55 @@ def main() -> None:
         std_cols = [c for c in fold_df_std.columns if c.startswith("std_")]
         rec_cols = [c for c in fold_df_rec.columns if c.startswith("rec_")]
 
-        methods: list[tuple[str, pd.DataFrame, list[str], str]] = [
+        methods: list[tuple[str, pd.DataFrame, list[str], str, str]] = [
             (
                 "baseline_v3_core",
                 data,
                 base_v3_cols,
                 "v3 core features + known-future promo basics",
+                "baseline",
             ),
             (
                 "core_plus_promo_interactions",
                 data,
                 base_v3_cols + deep_promo_cols,
                 "core plus richer promo timing/intensity interactions",
+                "promo",
             ),
             (
                 "core_plus_regime_features",
                 data,
                 base_v3_cols + regime_cols,
                 "core plus volatility/regime trend interactions",
+                "regime",
             ),
             (
                 "core_plus_selected_aux_lags",
                 data,
                 base_v3_cols + selected_aux_cols,
                 "core plus selected lagged aux signals (web/orders/returns/ship)",
+                "aux_lags",
             ),
             (
                 "core_plus_std_profiles",
                 fold_df_std,
                 base_v3_cols + std_cols,
                 "core plus fold-safe standard seasonal profiles",
+                "std_profile",
             ),
             (
                 "core_plus_recency_profiles",
                 fold_df_rec,
                 base_v3_cols + rec_cols,
                 "core plus fold-safe recency-weighted seasonal profiles",
+                "recency_profile",
             ),
             (
                 "deep_combo_promo_std",
                 fold_df_std,
                 base_v3_cols + deep_promo_cols + std_cols,
                 "core plus promo interactions plus std profiles",
+                "combo",
             ),
             (
                 "deep_combo_blend",
@@ -581,14 +633,19 @@ def main() -> None:
                 + std_cols
                 + rec_cols,
                 "deeper blend: promo+regime+selected aux+std/rec profiles",
+                "combo",
             ),
         ]
 
+        if QUICK_METHOD_NAMES is not None:
+            methods = [m for m in methods if m[0] in QUICK_METHOD_NAMES]
+
         baseline_mae = None
-        for method_name, method_df, method_cols, note in methods:
+        for method_name, method_df, method_cols, note, family in methods:
             result, imp_df = evaluate_fold(method_df, fold, method_cols)
             result["method"] = method_name
             result["note"] = note
+            result["family"] = family
 
             if method_name == "baseline_v3_core":
                 baseline_mae = result["mae"]
@@ -625,6 +682,33 @@ def main() -> None:
         .reset_index(name="fold_wins")
     )
 
+    total_folds = max(int(log_df["fold"].nunique()), 1)
+    method_family = log_df.groupby("method", as_index=False).agg(
+        family=("family", "first")
+    )
+    stability = log_df.groupby("method", as_index=False).agg(
+        improve_folds=(
+            "delta_vs_fold_baseline_mae",
+            lambda s: int((s < 0).sum()),
+        ),
+        worsen_folds=(
+            "delta_vs_fold_baseline_mae",
+            lambda s: int((s > 0).sum()),
+        ),
+        neutral_folds=(
+            "delta_vs_fold_baseline_mae",
+            lambda s: int((s == 0).sum()),
+        ),
+        best_fold_delta=("delta_vs_fold_baseline_mae", "min"),
+        worst_fold_delta=("delta_vs_fold_baseline_mae", "max"),
+    )
+    stability["improve_ratio"] = stability["improve_folds"] / total_folds
+    stability["stable_candidate"] = (
+        (stability["improve_ratio"] >= STABLE_IMPROVE_RATIO)
+        & (stability["best_fold_delta"] < 0)
+        & (stability["worst_fold_delta"] <= MAX_STABLE_WORST_DELTA)
+    )
+
     summary = (
         log_df.groupby("method", as_index=False)
         .agg(
@@ -637,9 +721,11 @@ def main() -> None:
             median_features=("n_features", "median"),
             model=("model", lambda x: x.mode().iloc[0]),
         )
+        .merge(method_family, on="method", how="left")
         .merge(wins, on="method", how="left")
+        .merge(stability, on="method", how="left")
         .fillna({"fold_wins": 0})
-        .sort_values("mean_mae")
+        .sort_values(["stable_candidate", "mean_mae"], ascending=[False, True])
         .reset_index(drop=True)
     )
     summary["rank_mean_mae"] = np.arange(1, len(summary) + 1)
@@ -669,6 +755,7 @@ def main() -> None:
     print("[5/5] Writing research notes...")
     best = summary.iloc[0].to_dict()
     runner_up = summary.iloc[1].to_dict() if len(summary) > 1 else None
+    stable_rows = summary[summary["stable_candidate"]].copy()
 
     notes = [
         "# EX_08 Deeper Feature Engineering Research",
@@ -678,15 +765,21 @@ def main() -> None:
         "- Goal: go deeper on feature engineering with time-series K-fold research.",
         "",
         "## Evaluation Setup",
-        "- Split: expanding time-series K-fold (5 folds, each 365-day validation)",
+        f"- Run mode: {RUN_MODE}",
+        f"- Split: expanding time-series K-fold ({STRICT_N_SPLITS} folds, {STRICT_VAL_DAYS}-day validation)",
+        f"- Fold policy: min train history = {STRICT_MIN_TRAIN_DAYS:,} days",
+        f"- Estimators/iters: LightGBM={LGBM_ESTIMATORS}, HistGBR={HGB_MAX_ITER}",
         "- Metric: MAE (lower is better)",
         "- Model: LightGBM fallback HistGradientBoostingRegressor",
         "",
         "## Best Method",
         f"- method: {best['method']}",
+        f"- family: {best.get('family')}",
         f"- mean_mae: {best['mean_mae']:.2f}",
         f"- mean_delta_vs_baseline: {best['mean_delta_vs_baseline']:+.2f}",
         f"- fold_wins: {int(best['fold_wins'])}",
+        f"- improve_ratio: {best.get('improve_ratio', 0.0):.2f}",
+        f"- worst_fold_delta: {best.get('worst_fold_delta', np.nan):+.2f}",
         "",
     ]
 
@@ -695,11 +788,28 @@ def main() -> None:
             [
                 "## Runner Up",
                 f"- method: {runner_up['method']}",
+                f"- family: {runner_up.get('family')}",
                 f"- mean_mae: {runner_up['mean_mae']:.2f}",
                 f"- mean_delta_vs_baseline: {runner_up['mean_delta_vs_baseline']:+.2f}",
                 "",
             ]
         )
+
+    notes.append("## Stable Delta Shortlist")
+    if stable_rows.empty:
+        notes.append(
+            "- No method met stability gate (improve_ratio>=0.75 and worst_fold_delta<=+6000)."
+        )
+    else:
+        for _, row in stable_rows.head(4).iterrows():
+            notes.append(
+                "- "
+                f"{row['method']} ({row.get('family')}): "
+                f"mean_delta={row['mean_delta_vs_baseline']:+.2f}, "
+                f"improve_ratio={row['improve_ratio']:.2f}, "
+                f"worst_fold_delta={row['worst_fold_delta']:+.2f}"
+            )
+    notes.append("")
 
     notes.extend(
         [
@@ -728,7 +838,9 @@ def main() -> None:
         "summary_path": str(summary_path),
         "notes_path": str(notes_path),
         "importance_path": str(imp_path) if imp_path is not None else None,
-        "best_importance_path": str(best_imp_path) if best_imp_path is not None else None,
+        "best_importance_path": (
+            str(best_imp_path) if best_imp_path is not None else None
+        ),
     }
     (TRACK_DIR / "meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
 
@@ -742,7 +854,23 @@ def main() -> None:
         print(f"Saved best features: {best_imp_path}")
     print("-" * 78)
     print("Top methods by mean MAE:")
-    print(summary[["rank_mean_mae", "method", "mean_mae", "mean_delta_vs_baseline", "fold_wins"]].head(8).to_string(index=False))
+    print(
+        summary[
+            [
+                "rank_mean_mae",
+                "method",
+                "family",
+                "mean_mae",
+                "mean_delta_vs_baseline",
+                "improve_ratio",
+                "worst_fold_delta",
+                "stable_candidate",
+                "fold_wins",
+            ]
+        ]
+        .head(8)
+        .to_string(index=False)
+    )
 
 
 if __name__ == "__main__":

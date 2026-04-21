@@ -5,20 +5,28 @@
 - Goal: go deeper on feature engineering with time-series K-fold research.
 
 ## Evaluation Setup
-- Split: expanding time-series K-fold (5 folds, each 365-day validation)
+- Split: strict expanding time-series K-fold (4 folds, each 365-day validation)
+- Fold policy: min train history = 2,190 days (recent-regime emphasis)
 - Metric: MAE (lower is better)
 - Model: LightGBM fallback HistGradientBoostingRegressor
 
 ## Best Method
 - method: core_plus_promo_interactions
-- mean_mae: 614770.73
-- mean_delta_vs_baseline: -14299.60
-- fold_wins: 2
+- family: promo
+- mean_mae: 572902.41
+- mean_delta_vs_baseline: -13319.32
+- fold_wins: 1
+- improve_ratio: 0.75
+- worst_fold_delta: +3443.46
 
 ## Runner Up
 - method: core_plus_selected_aux_lags
-- mean_mae: 628098.27
-- mean_delta_vs_baseline: -972.06
+- family: aux_lags
+- mean_mae: 584099.15
+- mean_delta_vs_baseline: -2122.57
+
+## Stable Delta Shortlist
+- core_plus_promo_interactions (promo): mean_delta=-13319.32, improve_ratio=0.75, worst_fold_delta=+3443.46
 
 ## Suggested Next Production Tests
 - Wire top 1-2 FE bundles into EX_03 and EX_04 train scripts.

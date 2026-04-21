@@ -1,0 +1,11 @@
+{
+  "elapsed_sec": 562.7,
+  "best_method": "aligned_keep_avg",
+  "candidate_path": "output/submissions/ex_16_aligned_keep_avg.csv",
+  "methods_tested": [
+    "aligned_drop_avg",
+    "aligned_keep_avg",
+    "aligned_drop_avg_selected_aux",
+    "aligned_keep_avg_selected_aux"
+  ]
+}

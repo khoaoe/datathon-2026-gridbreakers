@@ -1,0 +1,28 @@
+{
+  "elapsed_sec": 1976.5,
+  "components": [
+    "core_v3_like",
+    "aligned_keep_avg",
+    "aligned_drop_avg",
+    "naive_lag365"
+  ],
+  "folds": [
+    {
+      "name": "fold_2021",
+      "val_start": "2021-01-01",
+      "val_end": "2021-12-31"
+    },
+    {
+      "name": "fold_2022",
+      "val_start": "2022-01-01",
+      "val_end": "2022-12-31"
+    }
+  ],
+  "candidate_path": "output/submissions/ex_18_ensemble_step.csv",
+  "weights": {
+    "core_v3_like": 0.1955922228420932,
+    "aligned_keep_avg": 0.659816220533652,
+    "aligned_drop_avg": 9.154715513992325e-14,
+    "naive_lag365": 0.1445915566241633
+  }
+}

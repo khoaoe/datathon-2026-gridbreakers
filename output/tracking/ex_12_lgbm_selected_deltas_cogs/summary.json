@@ -1,0 +1,13 @@
+{
+  "experiment": "ex_12_lgbm_selected_deltas_cogs",
+  "timestamp": "2026-04-20T17:28:28.297662",
+  "elapsed_sec": 183.9,
+  "params": {},
+  "final_scores": {
+    "mae": 472319.9619627325,
+    "rmse": 645198.9642416758,
+    "r2": 0.8043254572042559
+  },
+  "total_steps": 5,
+  "notes": ""
+}

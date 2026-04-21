@@ -1,0 +1,9 @@
+fold,train_end,val_start,val_end,train_days,val_days,n_features,model,mae,rmse,r2,method,note,family,delta_vs_fold_baseline_mae
+tscv_1,2022-01-05,2022-01-06,2022-07-04,3473,180,131,lightgbm,624153.6889050837,827761.4319003274,0.7875281729895025,core_plus_selected_aux_lags,core plus selected lagged aux signals (web/orders/returns/ship),aux_lags,-6780.684264448588
+tscv_1,2022-01-05,2022-01-06,2022-07-04,3473,180,130,lightgbm,628550.4034897819,824856.9635698212,0.7890166091271785,core_plus_regime_features,core plus volatility/regime trend interactions,regime,-2383.9696797503857
+tscv_1,2022-01-05,2022-01-06,2022-07-04,3473,180,119,lightgbm,630934.3731695323,839401.224207661,0.7815106995440185,baseline_v3_core,v3 core features + known-future promo basics,baseline,0.0
+tscv_1,2022-01-05,2022-01-06,2022-07-04,3473,180,124,lightgbm,631461.0150959126,827710.9129156485,0.7875541068709603,core_plus_promo_interactions,core plus richer promo timing/intensity interactions,promo,526.64192638034
+tscv_2,2022-07-04,2022-07-05,2022-12-31,3653,180,124,lightgbm,502623.2565292108,694161.7344956176,0.6782965442138369,core_plus_promo_interactions,core plus richer promo timing/intensity interactions,promo,-3733.5695788104204
+tscv_2,2022-07-04,2022-07-05,2022-12-31,3653,180,119,lightgbm,506356.8261080212,698070.9717490625,0.6746629347526787,baseline_v3_core,v3 core features + known-future promo basics,baseline,0.0
+tscv_2,2022-07-04,2022-07-05,2022-12-31,3653,180,131,lightgbm,506634.72386534646,699248.1543419067,0.6735647540144248,core_plus_selected_aux_lags,core plus selected lagged aux signals (web/orders/returns/ship),aux_lags,277.8977573252632
+tscv_2,2022-07-04,2022-07-05,2022-12-31,3653,180,130,lightgbm,509228.7710218936,703170.0843683903,0.669892677017129,core_plus_regime_features,core plus volatility/regime trend interactions,regime,2871.9449138724012
