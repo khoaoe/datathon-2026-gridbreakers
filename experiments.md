@@ -27,6 +27,8 @@
 | 23 | EX_18 bridge submissions | `[x]` | — | — | — | 932,735.223 (best of 1) | — | Submitted w01 only; failed vs anchor; bridge ladder stopped |
 | 24 | EX_19 robust dual-weight ensemble | `[x]` | 599,677 | — | — | **834,681.849** | 1,673s | 3-fold recursive OOF (2020-2022) with target-specific robust global weights; direct submission became new best |
 | 25 | EX_19 bridge submissions | `[x]` | — | — | — | 859,529.710 (best of 1) | — | Submitted w01; improved vs EX_18 anchor but worse than EX_19 direct candidate, then stopped ladder |
+| 26 | EX_20 recency-weighted dual ensemble | `[x]` | 564,951 | — | — | **830,584.739** | 1,009s | 2-fold (2021/2022) recency-weighted global objective, anchored to EX_19 production winner; direct candidate is new best |
+| 27 | EX_20 bridge submissions | `[x]` | — | — | — | 834,398.889 (best of 1) | — | Submitted w01; improved vs EX_19 anchor but worse than EX_20 direct candidate; stopped ladder |
 
 ## How to Run
 
@@ -52,6 +54,7 @@ python -m modeling.ex_16_recursive_fe_research
 python -m modeling.ex_17_recursive_aux_impute_research
 python -m modeling.ex_18_ensemble_step_research
 python -m modeling.ex_19_robust_dual_weight_ensemble
+python -m modeling.ex_20_recency_weighted_dual_ensemble
 ```
 
 ## Submissions
@@ -107,6 +110,11 @@ All submission CSVs are saved to `output/submissions/`.
 | 19 | `ex_19_bridge_w02.csv` | 548 | `[ ]` (skipped) |
 | 19 | `ex_19_bridge_w03.csv` | 548 | `[ ]` (skipped) |
 | 19 | `ex_19_bridge_w04.csv` | 548 | `[ ]` (skipped) |
+| 20 | `ex_20_recency_weighted_dual_ensemble.csv` | 548 | `[x]` |
+| 20 | `ex_20_bridge_w01.csv` | 548 | `[x]` |
+| 20 | `ex_20_bridge_w02.csv` | 548 | `[ ]` (skipped) |
+| 20 | `ex_20_bridge_w03.csv` | 548 | `[ ]` (skipped) |
+| 20 | `ex_20_bridge_w04.csv` | 548 | `[ ]` (skipped) |
 
 ## Dependencies
 
@@ -165,3 +173,10 @@ pip install pandas numpy scikit-learn lightgbm xgboost prophet shap neuralforeca
 - Public LB update (2026-04-21): `ex_19_bridge_w01.csv` scored `859,529.71007` (IMPROVED vs EX_18 anchor, but below EX_19 direct score).
 - Public LB update (2026-04-21): `ex_19_robust_dual_weight_ensemble.csv` scored `834,681.84856` (IMPROVED; new production anchor).
 - `ex_19_bridge_w02.csv`, `ex_19_bridge_w03.csv`, and `ex_19_bridge_w04.csv` intentionally skipped after strong direct-candidate win.
+- EX_20 recency-weighted local means (2021/2022): Revenue MAE `564,951`; COGS MAE `504,395`; score `766,709`.
+- EX_20 Revenue weights: `core_v3_like=0.2326`, `aligned_keep_avg=0.3154`, `aligned_no_profiles=0.3780`, `naive_lag365=0.0740`.
+- EX_20 COGS weights: `core_v3_like=0.0617`, `aligned_keep_avg=0.6511`, `aligned_no_profiles=0.0688`, `naive_lag365=0.2185`.
+- EX_20 vs EX_19 on shared folds (2021/2022): `766,709.14` vs `779,899.78` (improved by `13,190.65`).
+- Public LB update (2026-04-21): `ex_20_bridge_w01.csv` scored `834,398.88891` (IMPROVED vs EX_19 anchor, but below EX_20 direct score).
+- Public LB update (2026-04-21): `ex_20_recency_weighted_dual_ensemble.csv` scored `830,584.73892` (IMPROVED; new production anchor).
+- `ex_20_bridge_w02.csv`, `ex_20_bridge_w03.csv`, and `ex_20_bridge_w04.csv` intentionally skipped after strong direct-candidate win.

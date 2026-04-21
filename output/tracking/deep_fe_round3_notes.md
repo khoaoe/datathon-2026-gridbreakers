@@ -149,3 +149,48 @@
 ## Decision Update
 - Promote ex_19_robust_dual_weight_ensemble.csv as new production anchor.
 - Stop EX_19 bridge ladder.
+
+## EX_20 Recency-Weighted Dual Ensemble
+- Built follow-up deep pass anchored on EX_19 production winner.
+- Validation setup:
+  - 2 yearly recursive folds: 2021, 2022
+  - Fold recency weights: 2021=0.4, 2022=0.6
+  - Components:
+    - core_v3_like
+    - aligned_keep_avg
+    - aligned_no_profiles
+    - naive_lag365
+  - Robust objective: weighted-mean MAE + weighted std penalty + L2 shrink
+- Global weights (Revenue):
+  - core_v3_like: 0.2326
+  - aligned_keep_avg: 0.3154
+  - aligned_no_profiles: 0.3780
+  - naive_lag365: 0.0740
+- Global weights (COGS):
+  - core_v3_like: 0.0617
+  - aligned_keep_avg: 0.6511
+  - aligned_no_profiles: 0.0688
+  - naive_lag365: 0.2185
+- Local recursive means:
+  - Revenue MAE: 564,951.25
+  - COGS MAE: 504,394.71
+  - Score (Rev + 0.4*COGS): 766,709.14
+- Shared-fold comparison vs EX_19:
+  - EX_19 score (2021/2022 mean): 779,899.78
+  - EX_20 score (2021/2022 mean): 766,709.14
+  - Delta: -13,190.65 (EX_20 better locally)
+- Generated files:
+  - Candidate: output/submissions/ex_20_recency_weighted_dual_ensemble.csv
+  - Bridges: output/submissions/ex_20_bridge_w01.csv .. ex_20_bridge_w04.csv
+  - Tracking: output/tracking/ex_20_recency_weighted_dual_ensemble/
+
+## EX_20 Public LB Outcomes
+- ex_20_bridge_w01.csv: 834,398.88891 (IMPROVED vs EX_19 anchor)
+- ex_20_recency_weighted_dual_ensemble.csv: 830,584.73892 (IMPROVED, new best)
+- ex_20_bridge_w02.csv: skipped after strong direct-candidate win
+- ex_20_bridge_w03.csv: skipped after strong direct-candidate win
+- ex_20_bridge_w04.csv: skipped after strong direct-candidate win
+
+## Decision Update
+- Promote ex_20_recency_weighted_dual_ensemble.csv as new production anchor.
+- Stop EX_20 bridge ladder.

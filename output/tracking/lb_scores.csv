@@ -20,3 +20,5 @@ date,experiment,submission_file,public_lb_mae,branch,notes
 2026-04-20,ex_18_ensemble_step,ex_18_ensemble_step.csv,859853.23873,ensemble-step,"IMPROVED: new best public score; promote as production anchor"
 2026-04-21,ex_19_bridge_w01,ex_19_bridge_w01.csv,859529.71007,ex19-bridge,"IMPROVED vs EX_18 anchor, but dominated by direct EX_19 candidate"
 2026-04-21,ex_19_robust_dual_weight_ensemble,ex_19_robust_dual_weight_ensemble.csv,834681.84856,ex19-direct,"IMPROVED: new best public score; promote as production anchor"
+2026-04-21,ex_20_bridge_w01,ex_20_bridge_w01.csv,834398.88891,ex20-bridge,"IMPROVED vs EX_19 anchor, but below EX_20 direct candidate"
+2026-04-21,ex_20_recency_weighted_dual_ensemble,ex_20_recency_weighted_dual_ensemble.csv,830584.73892,ex20-direct,"IMPROVED: new best public score; promote as production anchor"
