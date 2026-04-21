@@ -1,66 +1,31 @@
-# Next Agent Brief: Deep Feature Engineering Research
+# Next Agent Brief: Holiday and Special Events Feature Engineering
 
 ## Mission
-- Do deeper feature engineering research focused on improving public leaderboard MAE below anchor 861132.08456.
-- Keep work leakage-safe and reproducible.
+- Focus on extending the successful `ex_22` deep feature engineering (which achieved **796,018** MAE on the leaderboard) by building robust temporal features using standard libraries.
+- Keep work leakage-safe and reproducible for our recursive forecasting setup.
 
-## Mandatory First Step (No Exceptions)
-- Read every markdown document in repo before proposing new experiment.
+## Current Anchor
+- **Best public score:** `796,018.49022` (`ex_22_deep_fe_holidays_dual_ensemble.csv`)
+- **Current active FE pipeline:** `modeling/feature_engineering.py`
 
-### Required Reading List
-- approaches.md
-- dataset_summary.md
-- README.md
-- experiments.md
-- output/tracking/ex_08_feature_engineering_research/notes.md
-- output/tracking/ex_11_anchor_bridge/notes.md
+## Next Approach & Recommended Research Direction
+1. **Use the `holidays` Python Library:** 
+   - Refactor and extend the current hardcoded holiday logic to use the official Python `holidays` package.
+   - You **must** include Vietnamese holidays (`holidays.VN()`) since the e-commerce data shows major cyclical anomalies around Tet and other national holidays in Vietnam.
+2. **Double Dates for E-commerce:** 
+   - Explicitly add "Double Date" indicator features (e.g., 1/1, 2/2, ..., 9/9, 10/10, 11/11, 12/12).
+   - This is a fashion e-commerce dataset in Southeast Asia where double-date sale campaigns (like Shopee and Lazada mega sales) drive massive revenue spikes. Marking the days leading up to and the day of these sales is critical.
+3. **Model Integration:**
+   - Add these new features cleanly into `build_calendar_features()` in `feature_engineering.py`.
+   - Create a new experiment script (e.g., `ex_24`) based on `ex_22`'s dual-ensemble structure to validate and submit these new features.
+
+## Mandatory First Step
+- Read `approaches.md` and `dataset_summary.md` to understand context.
+- Check `experiments.md` and `output/tracking/lb_scores.csv` to avoid repeating failures.
 
 ## Hard Constraints
-- Do not overwrite anchor submission: output/submissions/ex_06_ensemble_weighted.csv.
-- Log every leaderboard outcome to output/tracking/lb_scores.csv.
-- If experiment fails on LB, mark it as FAILED in experiments.md notes and lb_scores.csv notes.
-- Prefer small controlled deltas over large blend/model jumps.
+- **Recursive Safety:** All new date features must be based on the calendar date, which is known in advance. Do not use lags of exogenous variables that are unavailable during the 548-day test period.
+- **Log Everything:** Log every LB outcome to `output/tracking/lb_scores.csv` and `experiments.md`.
 
-## Failed Experiments To Avoid Repeating
-
-### Failed Recovery Family
-- ex_06_recovery_v1_lgbm_up.csv -> 927804.15516 (FAILED)
-- ex_06_recovery_v2_lgbm_up_more.csv -> 926067.29049 (FAILED)
-
-### Failed Full-Power Microblend Family
-- ex_10_fp_ex06opt_w01.csv -> 932988.67676 (FAILED)
-- ex_10_fp_med4_w01.csv -> 933214.06121 (FAILED)
-- ex_10_fp_mean4_w01.csv -> 933222.02871 (FAILED)
-- ex_10_fp_final_w005.csv -> 933297.12358 (FAILED)
-
-### Failed FE Refresh Weighted Ensemble
-- ex_06_ensemble_weighted_fe_refresh.csv -> ~879000 (FAILED, user-reported)
-
-## Current Useful Assets
-- modeling/feature_engineering.py (active FE pipeline)
-- modeling/ex_03_lgbm.py (leakage-safe LGBM training/inference)
-- modeling/ex_08_feature_engineering_research.py (method ranking framework)
-- modeling/ex_11_anchor_bridge_blends.py (small bridge blend generator)
-
-## Recommended Research Direction
-1. Re-run ex_08_feature_engineering_research with stricter time-split validation and per-family ablation.
-2. Keep only top 1-2 FE deltas that beat baseline_v3_core consistently across folds.
-3. Train ex_03_lgbm with selected FE deltas only.
-4. Build minimal bridge variants from anchor (small weights only).
-5. Select at most 4 submissions for daily cap, ordered lowest drift to highest drift.
-
-## Deliverables
-- Updated tracker files:
-  - output/tracking/lb_scores.csv
-  - experiments.md
-- One short note in output/tracking/ with:
-  - What changed in FE
-  - Why it should generalize
-  - Which failed families were intentionally avoided
-
-## Quick Sanity Checklist Before Submit
-- Features available at prediction time only.
-- No validation leakage from future periods.
-- Submission has 548 rows and no NaN.
-- Anchor file unchanged.
-- Failed families above not reintroduced.
+## Note on EX_23
+- `ex_23` (XGBoost + LightGBM ensemble) was removed due to excessive runtime and overfitting. Stick to the `ex_22` LightGBM ensemble architecture for the next few tests.

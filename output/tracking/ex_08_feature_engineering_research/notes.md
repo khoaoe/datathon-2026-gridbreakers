@@ -5,8 +5,10 @@
 - Goal: go deeper on feature engineering with time-series K-fold research.
 
 ## Evaluation Setup
-- Split: strict expanding time-series K-fold (4 folds, each 365-day validation)
-- Fold policy: min train history = 2,190 days (recent-regime emphasis)
+- Run mode: strict
+- Split: expanding time-series K-fold (4 folds, 365-day validation)
+- Fold policy: min train history = 2,190 days
+- Estimators/iters: LightGBM=900, HistGBR=700
 - Metric: MAE (lower is better)
 - Model: LightGBM fallback HistGradientBoostingRegressor
 
