@@ -1,0 +1,31 @@
+{
+  "date_range": {
+    "min": "2012-07-04",
+    "max": "2022-12-31",
+    "n_rows": 3833
+  },
+  "duplicates": {
+    "duplicate_dates": 0
+  },
+  "missing_dates": {
+    "n_missing": 0,
+    "first_10": []
+  },
+  "promotions": {
+    "n_promos": 50,
+    "pct_days_promo_active": 0.44534307331072265
+  },
+  "targets": {
+    "Revenue": {
+      "min": 279813.94,
+      "max": 20905271.35
+    },
+    "COGS": {
+      "min": 236576.31,
+      "max": 16535857.67
+    }
+  },
+  "outputs": {
+    "anomalies_csv": "/home/pineapple/Desktop/projects/datathon-2026-gridbreakers/output/cleaning/sales_anomalies.csv"
+  }
+}
