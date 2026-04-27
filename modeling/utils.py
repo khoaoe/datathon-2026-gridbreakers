@@ -16,9 +16,10 @@ def evaluate(y_true, y_pred, label=""):
     return {"mae": mae, "rmse": rmse, "r2": r2}
 
 
-def load_sales():
-    """Load train sales and test template."""
-    train = pd.read_csv(FILES["sales"], parse_dates=["Date"])
+def load_sales(clean: bool = False):
+    """Load train sales (optionally cleaned) and test template."""
+    sales_key = "sales_clean" if clean and "sales_clean" in FILES else "sales"
+    train = pd.read_csv(FILES[sales_key], parse_dates=["Date"])
     test = pd.read_csv(FILES["sample_sub"], parse_dates=["Date"])
     train = train.sort_values("Date").reset_index(drop=True)
     test = test.sort_values("Date").reset_index(drop=True)

@@ -17,6 +17,7 @@ for d in [OUTPUT_DIR, MODEL_DIR, SUBMISSION_DIR]:
 # ── Data files ─────────────────────────────────────────────────────────────
 FILES = {
     "sales": DATA_DIR / "sales.csv",
+    "sales_clean": DATA_DIR / "sales_clean.csv",
     "sample_sub": DATA_DIR / "sample_submission.csv",
     "orders": DATA_DIR / "orders.csv",
     "order_items": DATA_DIR / "order_items.csv",

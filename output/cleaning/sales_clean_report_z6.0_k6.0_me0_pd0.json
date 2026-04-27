@@ -1,0 +1,36 @@
+{
+  "config": {
+    "roll_window": 365,
+    "min_periods": 60,
+    "z_thresh": 6.0,
+    "cap_k": 6.0,
+    "keep_month_end": false,
+    "keep_payday_window": false
+  },
+  "integrity": {
+    "n_rows": 3833,
+    "duplicate_dates": 0
+  },
+  "promotions": {
+    "pct_days_promo_active": 0.44534307331072265,
+    "n_promos": 50
+  },
+  "keep_mask": {
+    "pct_keep": 0.47378032872423687
+  },
+  "targets": {
+    "Revenue": {
+      "n_clipped": 9,
+      "max_abs_delta": 1964700.1466200054,
+      "max_abs_z": 6.885151473585436,
+      "n_changed": 9
+    },
+    "COGS": {
+      "n_clipped": 4,
+      "max_abs_delta": 996208.8346880004,
+      "max_abs_z": 7.480344693676561,
+      "n_changed": 4
+    },
+    "any_changed_rows": 9
+  }
+}
