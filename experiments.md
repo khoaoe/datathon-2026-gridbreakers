@@ -32,6 +32,14 @@
 | 22 | EX_21 deep FE recency dual ensemble | `[x]` | — | — | — | **820,000.000** | — | Deep FE recency-profile dual ensemble |
 | 23 | EX_22 deep FE holidays dual ensemble | `[ ]` | 554,142 | — | — | — | 2025s | Added Tet holiday features and volatility regime features; average fold score ~827k |
 | 24 | EX_22 bridge submissions | `[ ]` | — | — | — | — | — | 4 bridge submissions from EX_21 anchor |
+| 25 | EX_24 deep FE holidays + double-date dual ensemble | `[x]` | 590,550* | — | — | 826,795.666 | — | EX_22 architecture + holidays.VN + double-date campaign windows; direct candidate regressed on LB (`*` quick fold-2022 probe only) |
+| 26 | EX_24 bridge submissions | `[x]` | — | — | — | **795,838.944** (best of 1) | — | Submitted w01; improved vs EX_22 direct anchor and became new production anchor |
+| 27 | EX_25 context-aware deep FE | `[x]` | 617,583* | — | — | 842,405.185 | 2124s | Fixed naive FE (Tet slump, modern double dates, summer vacation spikes); `*` mean global revenue CV. Direct candidate regressed. |
+| 28 | EX_26 clean continuous calendar FE | `[x]` | 613,518* | — | — | — | 1800s | Replaced all rigid binary flags with continuous distance features (`days_to_mega_double`); `*` mean global revenue CV |
+| 29 | EX_49 YoY-Growth Stateless Hybrid | `[x]` | 752,846* | — | — | — | 894s | Multi-path stateless (YoY/Quad/AOV/Pure); Path D dominates 90%; test rev_mean=3,712k; `*` mean ens CV |
+| 30 | EX_50 Lag-365 Direct Model | `[x]` | 805,133* | — | — | — | 539s | lag365 features, 2-phase (365d direct + 183d recursive); test rev_mean=3,361k; `*` mean direct CV |
+| 31 | EX_51 Lag-365 Recursive Ensemble | `[x]` | 769,237* | — | — | — | 2524s | 3-component ensemble (lag365/stateless/full); optimal w=0.0/0.7/0.3; test rev_mean=3,760k; `*` mean ens CV |
+| 32 | EX_52 Monthly-Recalibrated Ensemble | `[x]` | 726,699* | — | — | — | 1281s | Fix snowball uneven growth bias using CV error patterns. Best blend (sl=0.7) mean CV=726k. |
 
 ## How to Run
 
@@ -59,6 +67,10 @@ python -m modeling.ex_18_ensemble_step_research
 python -m modeling.ex_19_robust_dual_weight_ensemble
 python -m modeling.ex_20_recency_weighted_dual_ensemble
 python -m modeling.ex_21_deep_fe_recency_dual_ensemble
+python -m modeling.ex_22_deep_fe_holidays_dual_ensemble
+python -m modeling.ex_24_deep_fe_holidays_double_dates_dual_ensemble
+python -m modeling.ex_25_deep_fe_context_aware_dual_ensemble
+python -m modeling.ex_26_clean_continuous_calendar_dual_ensemble
 ```
 
 ## Submissions
@@ -125,11 +137,26 @@ All submission CSVs are saved to `output/submissions/`.
 | 22 | `ex_22_bridge_w02.csv` | 548 | `[ ]` (skipped) |
 | 22 | `ex_22_bridge_w03.csv` | 548 | `[ ]` (skipped) |
 | 22 | `ex_22_bridge_w04.csv` | 548 | `[ ]` (skipped) |
+| 24 | `ex_24_deep_fe_holidays_double_dates_dual_ensemble.csv` | 548 | `[x]` |
+| 24 | `ex_24_bridge_w01.csv` | 548 | `[x]` |
+| 24 | `ex_24_bridge_w02.csv` | 548 | `[ ]` |
+| 24 | `ex_24_bridge_w03.csv` | 548 | `[ ]` |
+| 24 | `ex_24_bridge_w04.csv` | 548 | `[ ]` |
+| 25 | `ex_25_deep_fe_context_aware_dual_ensemble.csv` | 548 | `[x]` |
+| 25 | `ex_25_bridge_w01.csv` | 548 | `[x]` |
+| 25 | `ex_25_bridge_w02.csv` | 548 | `[ ]` |
+| 25 | `ex_25_bridge_w03.csv` | 548 | `[ ]` |
+| 25 | `ex_25_bridge_w04.csv` | 548 | `[ ]` |
+| 26 | `ex_26_clean_continuous_calendar_dual_ensemble.csv` | 548 | `[x]` |
+| 26 | `ex_26_bridge_w01.csv` | 548 | `[x]` |
+| 26 | `ex_26_bridge_w02.csv` | 548 | `[ ]` |
+| 26 | `ex_26_bridge_w03.csv` | 548 | `[ ]` |
+| 26 | `ex_26_bridge_w04.csv` | 548 | `[ ]` |
 
 ## Dependencies
 
 ```bash
-pip install pandas numpy scikit-learn lightgbm xgboost prophet shap neuralforecast
+pip install pandas numpy scikit-learn lightgbm xgboost prophet shap neuralforecast holidays
 ```
 
 ## Notes
@@ -194,3 +221,31 @@ pip install pandas numpy scikit-learn lightgbm xgboost prophet shap neuralforeca
 - Public LB update: `ex_22_bridge_w01.csv` scored `819,602.36777` (IMPROVED vs EX_21 anchor).
 - Public LB update: `ex_22_deep_fe_holidays_dual_ensemble.csv` scored `796,018.49022` (IMPROVED; new production anchor).
 - `ex_22_bridge_w02.csv`, `ex_22_bridge_w03.csv`, and `ex_22_bridge_w04.csv` intentionally skipped after strong direct-candidate win.
+- 2026-04-23: EX_24 feature research wired to `holidays.VN()` + double-date event windows in `build_calendar_features`; local and LB runs pending.
+- 2026-04-23: EX_24 quick recursive fold-2022 probe (datathon env): ensemble Revenue MAE `590,549.54`, COGS MAE `538,369.75`, score `805,897.44`; best single component remained `aligned_keep_avg`.
+- Public LB update (2026-04-23): `ex_24_deep_fe_holidays_double_dates_dual_ensemble.csv` scored `826,795.66594` (FAILED vs EX_22 production anchor; direct ensemble is worse).
+- Public LB update (2026-04-23): `ex_24_bridge_w01.csv` scored `795,838.94386` (IMPROVED vs EX_22 production anchor; promote as new production anchor).
+- Public LB update (2026-04-23): `ex_25_bridge_w01.csv` scored `795,779.93214` (IMPROVED very slightly vs EX_24 anchor).
+- Public LB update (2026-04-23): `ex_25_deep_fe_context_aware_dual_ensemble.csv` scored `842,405.18587` (FAILED heavily vs anchor). Binary step functions caused massive overfitting.
+- 2026-04-23: EX_26 clean continuous calendar FE. Removed rigid binary flags and relied entirely on continuous distance features (`days_to_tet`, `days_to_vn_holiday`, `days_to_mega_double`). Mean global CV score: Revenue MAE 613,518, COGS MAE 543,590, Score 830,954. Pending LB run for `ex_26_bridge_w01.csv` and `ex_26_clean_continuous_calendar_dual_ensemble.csv`.
+- 2026-04-25: EX_49 multi-path stateless hybrid research. 4 paths tested (YoY/Quad/AOV/Pure); Path D (pure stateless) dominated with 90% weight. CV=752,846 but test rev_mean=3,712k (too low).
+- 2026-04-25: EX_50 lag-365 direct model. 2-phase (365d direct + 183d recursive). CV=805,133, test rev_mean=3,361k.
+- 2026-04-25: EX_51 3-component lag365 recursive ensemble (lag365/stateless/full recursive). Optimal weights: stateless=0.7, full=0.3, lag365=0.0. CV=769,237, test rev_mean=3,760k.
+- Public LB update (2026-04-25): `ex_49_yoy_stateless.csv` scored `978,938.26093` (FAILED; pure stateless too low level).
+- Public LB update (2026-04-25): `ex_51_lag365_recursive.csv` scored `917,935.48146` (FAILED; direct ensemble too low level).
+- Public LB update (2026-04-25): `ex_49_bridge_w10.csv` scored `792,815.11519` (IMPROVED vs 795k anchor).
+- Public LB update (2026-04-25): `ex_51_bridge_w10.csv` scored `792,322.09974` (IMPROVED vs 795k anchor).
+- Public LB update (2026-04-25): `ex_49_bridge_w20.csv` scored `794,528.44560` (IMPROVED vs 795k anchor).
+- Public LB update (2026-04-25): **`ex_51_bridge_w20.csv` scored `792,254.33748`** (IMPROVED; **new production anchor**).
+- Public LB update (2026-04-25): `ex_49_bridge_w30.csv` scored `801,501.24626` (FAILED vs 795k anchor; too much stateless weight).
+- Public LB update (2026-04-25): `ex_51_bridge_w22.csv` scored `792,756.70420` (IMPROVED vs 795k but worse than w20).
+- Public LB update (2026-04-25): `ex_51_bridge_w18.csv` scored `791,908.32236` (IMPROVED vs w20).
+- Public LB update (2026-04-25): **`ex_51_bridge_w15.csv` scored `791,763.67199`** (IMPROVED; **new production anchor**).
+- 2026-04-25: EX_52 Monthly-Recalibrated Ensemble. Addressed the uneven monthly growth bias of the recursive model by scaling monthly predictions according to error patterns observed during CV. Huge CV improvement: recalibrated blend (726,699) vs raw recursive (820,171). Multiple bridge versions generated for LB testing.
+- Public LB update (2026-04-27): `ex_52_recalib_blend.csv` scored `923,416.07451` (FAILED; pure recalib blend too aggressive, level too low).
+- Public LB update (2026-04-27): `ex_52_rec_growth.csv` scored `957,781.59438` (FAILED; growth recalibration heavily overfit to CV).
+- Public LB update (2026-04-27): `ex_52_blend_bridge_w15.csv` scored `795,568.39916` (FAILED vs 791k anchor; blend bridge worse than EX-51 bridge).
+- Public LB update (2026-04-27): `ex_52_recalib_blend_bridge_w15.csv` scored `798,285.42994` (FAILED vs 791k anchor).
+- Public LB update (2026-04-27): `ex_52_recalib_blend_bridge_w20.csv` scored `801,617.18770` (FAILED vs 791k anchor).
+- Public LB update (2026-04-27): `ex_52_recalib_blend_bridge_w30.csv` scored `809,895.58382` (FAILED vs 791k anchor).
+- **Conclusion**: EX-52 monthly recalibration dramatically improved CV (727k vs 820k) but FAILED on LB. The per-month correction factors overfit to the 2-fold CV structure and don't generalize to the 2023-2024 test period. The current best remains **`ex_51_bridge_w15.csv` at 791,764**.

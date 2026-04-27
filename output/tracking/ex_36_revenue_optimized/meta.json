@@ -1,0 +1,13 @@
+{
+  "elapsed_sec": 1723.3,
+  "candidate_path": "output/submissions/ex_36_revenue_optimized.csv",
+  "n_seeds": 3,
+  "best_objective": "regression",
+  "n_features_rev": 144,
+  "n_features_cogs": 139,
+  "objectives_tested": [
+    "regression",
+    "mae",
+    "huber"
+  ]
+}

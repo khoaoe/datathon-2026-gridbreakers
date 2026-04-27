@@ -1,0 +1,10 @@
+{
+  "elapsed_sec": 3285.2,
+  "best_hypothesis": "H4_trend_plus_weight",
+  "best_config": {
+    "add_trend": true,
+    "train_from": null,
+    "halflife": 730
+  },
+  "mean_score": 850158.0108561767
+}

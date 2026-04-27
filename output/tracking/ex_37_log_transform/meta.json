@@ -1,0 +1,11 @@
+{
+  "elapsed_sec": 734.9,
+  "candidate_path": "output/submissions/ex_37_log_transform.csv",
+  "n_seeds": 3,
+  "n_features_rev": 144,
+  "n_features_cogs": 139,
+  "mean_score": 971201.4236093891,
+  "mean_bias_rev_pct": -15.58642360180468,
+  "mean_bias_cogs_pct": -3.4465197432895924,
+  "transform": "log1p"
+}

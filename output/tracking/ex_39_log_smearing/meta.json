@@ -1,0 +1,11 @@
+{
+  "elapsed_sec": 667.5,
+  "candidate_path": "output/submissions/ex_39_log_smearing.csv",
+  "n_seeds": 3,
+  "n_features_rev": 144,
+  "n_features_cogs": 139,
+  "mean_score": 982510.5231848154,
+  "smear_rev": 1.0000805900027598,
+  "smear_cogs": 1.0000989201774226,
+  "transform": "log1p_with_duan_smearing"
+}

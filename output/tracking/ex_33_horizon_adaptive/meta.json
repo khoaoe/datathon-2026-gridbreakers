@@ -1,0 +1,11 @@
+{
+  "elapsed_sec": 739.4,
+  "candidate_path": "output/submissions/ex_33_horizon_adaptive.csv",
+  "n_seeds": 3,
+  "n_features_rev": 144,
+  "n_features_cogs": 139,
+  "alpha_rev": 1.0,
+  "alpha_cogs": 0.75,
+  "mean_score_raw": 896732.7130425908,
+  "mean_score_corrected": 875211.7907718973
+}

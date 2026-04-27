@@ -159,46 +159,103 @@ def build_calendar_features(df):
 
     # Holidays
     df["is_national_holiday"] = (
-        ((df["month"] == 9) & (df["dayofmonth"] == 2)) |
-        ((df["month"] == 4) & (df["dayofmonth"] == 30)) |
-        ((df["month"] == 5) & (df["dayofmonth"] == 1))
+        ((df["month"] == 9) & (df["dayofmonth"] == 2))
+        | ((df["month"] == 4) & (df["dayofmonth"] == 30))
+        | ((df["month"] == 5) & (df["dayofmonth"] == 1))
     ).astype(int)
 
     TET_DATES = [
-        "2012-01-23", "2013-02-10", "2014-01-31", "2015-02-19",
-        "2016-02-08", "2017-01-28", "2018-02-16", "2019-02-05",
-        "2020-01-25", "2021-02-12", "2022-02-01", "2023-01-22",
-        "2024-02-10", "2025-01-29"
+        "2012-01-23",
+        "2013-02-10",
+        "2014-01-31",
+        "2015-02-19",
+        "2016-02-08",
+        "2017-01-28",
+        "2018-02-16",
+        "2019-02-05",
+        "2020-01-25",
+        "2021-02-12",
+        "2022-02-01",
+        "2023-01-22",
+        "2024-02-10",
+        "2025-01-29",
     ]
     tet_dates = pd.to_datetime(TET_DATES)
-    
+
     df["days_to_tet"] = np.nan
     df["days_since_tet"] = np.nan
-    
+
     dvals = d.values.astype("datetime64[ns]")
     starts = tet_dates.values.astype("datetime64[ns]")
-    
+
     next_idx = np.searchsorted(starts, dvals, side="left")
     has_next = next_idx < len(starts)
     capped_next_idx = np.minimum(next_idx, len(starts) - 1)
     next_dates = starts[capped_next_idx]
     df.loc[has_next, "days_to_tet"] = (
-        (next_dates[has_next] - dvals[has_next])
-        .astype("timedelta64[D]")
-        .astype(float)
+        (next_dates[has_next] - dvals[has_next]).astype("timedelta64[D]").astype(float)
     )
-    
+
     prev_idx = np.searchsorted(starts, dvals, side="right") - 1
     has_prev = prev_idx >= 0
     capped_prev_idx = np.maximum(prev_idx, 0)
     prev_dates = starts[capped_prev_idx]
     df.loc[has_prev, "days_since_tet"] = (
-        (dvals[has_prev] - prev_dates[has_prev])
+        (dvals[has_prev] - prev_dates[has_prev]).astype("timedelta64[D]").astype(float)
+    )
+
+    df["is_tet_week"] = ((df["days_to_tet"] <= 3) | (df["days_since_tet"] <= 4)).astype(
+        int
+    )
+
+    # Tet Ramp Up (peak 10 days before Tet)
+    df["tet_ramp_up_intensity"] = np.exp(-0.5 * ((df["days_to_tet"] - 10) / 4) ** 2)
+    df["tet_ramp_up_intensity"] = df["tet_ramp_up_intensity"].fillna(0)
+
+    # Tet Hangover (decay starting 2 days after Tet)
+    df["tet_hangover_penalty"] = np.exp(-0.5 * ((df["days_since_tet"] - 2) / 3) ** 2)
+    df["tet_hangover_penalty"] = df["tet_hangover_penalty"].fillna(0)
+
+    # Mega Double Dates (9.9, 10.10, 11.11, 12.12)
+    double_dates = [
+        f"{y}-{m:02d}-{m:02d}" for y in range(2012, 2026) for m in [9, 10, 11, 12]
+    ]
+    double_dates = pd.to_datetime(double_dates)
+
+    dd_starts = double_dates.values.astype("datetime64[ns]")
+
+    dd_next_idx = np.searchsorted(dd_starts, dvals, side="left")
+    dd_has_next = dd_next_idx < len(dd_starts)
+    dd_capped_next_idx = np.minimum(dd_next_idx, len(dd_starts) - 1)
+    dd_next_dates = dd_starts[dd_capped_next_idx]
+
+    df["days_to_next_mega_double"] = np.nan
+    df.loc[dd_has_next, "days_to_next_mega_double"] = (
+        (dd_next_dates[dd_has_next] - dvals[dd_has_next])
         .astype("timedelta64[D]")
         .astype(float)
     )
-    
-    df["is_tet_week"] = ((df["days_to_tet"] <= 3) | (df["days_since_tet"] <= 4)).astype(int)
+
+    # Pre-sale slump (1-4 days before double date)
+    df["is_pre_double_date_slump"] = (
+        df["days_to_next_mega_double"].between(1, 4)
+    ).astype(int)
+    df["is_mega_double_date"] = (df["days_to_next_mega_double"] == 0).astype(int)
+
+    # Payday Rhythms (Vietnamese paydays usually 25th)
+    df["is_payday_window"] = (
+        (df["dayofmonth"] >= 25) | (df["dayofmonth"] <= 5)
+    ).astype(int)
+
+    def _days_since_25th(date):
+        if date.day >= 25:
+            return date.day - 25
+        else:
+            prev_month = date - pd.DateOffset(months=1)
+            prev_25 = pd.Timestamp(year=prev_month.year, month=prev_month.month, day=25)
+            return (date - prev_25).days
+
+    df["days_since_payday"] = d.apply(_days_since_25th)
 
     return df
 
@@ -250,17 +307,21 @@ def build_growth_features(df, col="Revenue"):
     col_l1 = df[col].shift(1)
     col_mean_28 = col_l1.rolling(28, min_periods=7).mean()
     col_std_28 = col_l1.rolling(28, min_periods=7).std()
-    
+
     df[f"{col}_vol_14"] = col_l1.rolling(14, min_periods=4).std()
     df[f"{col}_vol_28"] = col_std_28
-    df[f"{col}_trend_7_28"] = col_l1.rolling(7, min_periods=3).mean() / col_mean_28.replace(0, np.nan)
+    df[f"{col}_trend_7_28"] = col_l1.rolling(
+        7, min_periods=3
+    ).mean() / col_mean_28.replace(0, np.nan)
     df[f"{col}_zscore_28"] = (col_l1 - col_mean_28) / col_std_28.replace(0, np.nan)
 
     # Cross-target features if applicable
     if col == "Revenue" and "COGS" in df.columns:
         cogs_l1 = df["COGS"].shift(1)
         cogs_mean_28 = cogs_l1.rolling(28, min_periods=7).mean()
-        df["cogs_trend_7_28"] = cogs_l1.rolling(7, min_periods=3).mean() / cogs_mean_28.replace(0, np.nan)
+        df["cogs_trend_7_28"] = cogs_l1.rolling(
+            7, min_periods=3
+        ).mean() / cogs_mean_28.replace(0, np.nan)
         df["rev_cogs_spread_lag1"] = col_l1 - cogs_l1
         df["rev_cogs_ratio_lag1"] = col_l1 / cogs_l1.replace(0, np.nan)
 
@@ -286,6 +347,7 @@ def compute_historical_profiles(train_df):
     df["weekofyear"] = df["Date"].dt.isocalendar().week.astype(int)
     df["dayofmonth"] = df["Date"].dt.day
     df["quarter"] = df["Date"].dt.quarter
+    df["is_weekend"] = (df["dayofweek"] >= 5).astype(int)
 
     profiles = {}
 
@@ -309,6 +371,7 @@ def compute_historical_profiles(train_df):
             rev_month_std=("Revenue", "std"),
             rev_month_median=("Revenue", "median"),
             cogs_month_mean=("COGS", "mean"),
+            cogs_month_std=("COGS", "std"),
         )
         .reset_index()
     )
@@ -349,10 +412,107 @@ def compute_historical_profiles(train_df):
         df.groupby(["month", "dayofweek"])
         .agg(
             rev_month_dow_mean=("Revenue", "mean"),
+            cogs_month_dow_mean=("COGS", "mean"),
         )
         .reset_index()
     )
 
+    # Weekend × Month interaction (captures large weekday/weekend gap per month)
+    profiles["month_weekend"] = (
+        df.groupby(["month", "is_weekend"])
+        .agg(
+            rev_month_weekend_mean=("Revenue", "mean"),
+            cogs_month_weekend_mean=("COGS", "mean"),
+        )
+        .reset_index()
+    )
+
+    # Margin profile by month (Revenue-COGS spread varies hugely: -5% Aug to +20% May)
+    df["_margin_pct"] = (df["Revenue"] - df["COGS"]) / df["Revenue"].replace(0, np.nan) * 100
+    profiles["margin_month"] = (
+        df.groupby("month")
+        .agg(
+            margin_pct_month_mean=("_margin_pct", "mean"),
+            margin_pct_month_std=("_margin_pct", "std"),
+        )
+        .reset_index()
+    )
+
+    return profiles
+
+
+def compute_order_based_profiles():
+    """Compute profile features from the orders and order_items tables.
+    
+    These capture AOV (average order value), order count patterns,
+    and category mix seasonality — all indexed by calendar keys.
+    """
+    profiles = {}
+    
+    try:
+        orders = pd.read_csv(
+            FILES["orders"],
+            parse_dates=["order_date"],
+            usecols=["order_id", "order_date"],
+        )
+        orders["dayofweek"] = orders["order_date"].dt.dayofweek
+        orders["month"] = orders["order_date"].dt.month
+        
+        daily_orders = orders.groupby("order_date").agg(
+            n_orders=("order_id", "count"),
+        ).reset_index()
+        daily_orders["dayofweek"] = daily_orders["order_date"].dt.dayofweek
+        daily_orders["month"] = daily_orders["order_date"].dt.month
+        
+        # Order count by (month, dow)
+        profiles["orders_month_dow"] = (
+            daily_orders.groupby(["month", "dayofweek"])
+            .agg(avg_orders_month_dow=("n_orders", "mean"))
+            .reset_index()
+        )
+        
+    except Exception as e:
+        print(f"  Warning: could not compute order-based profiles — {e}")
+    
+    # Category mix seasonality (Outdoor share varies 17% summer → 55% December)
+    try:
+        oi = pd.read_csv(
+            FILES["order_items"],
+            usecols=["order_id", "product_id", "quantity"],
+            low_memory=False,
+        )
+        products = pd.read_csv(
+            FILES["products"],
+            usecols=["product_id", "category"],
+        )
+        oi_prod = oi.merge(products, on="product_id", how="left")
+        oi_orders = oi_prod.merge(
+            orders[["order_id", "order_date"]], on="order_id"
+        )
+        oi_orders["month"] = oi_orders["order_date"].dt.month
+        
+        monthly_cat = oi_orders.groupby(["month", "category"]).agg(
+            n_items=("product_id", "count")
+        ).reset_index()
+        monthly_total = monthly_cat.groupby("month")["n_items"].sum().reset_index(
+            name="total_items"
+        )
+        monthly_cat = monthly_cat.merge(monthly_total, on="month")
+        monthly_cat["cat_share"] = monthly_cat["n_items"] / monthly_cat["total_items"]
+        
+        # Pivot to get category shares as separate columns
+        cat_pivot = monthly_cat.pivot_table(
+            index="month", columns="category", values="cat_share", fill_value=0
+        ).reset_index()
+        cat_pivot.columns = [
+            f"catshare_{c.lower().replace(' ', '_')}" if c != "month" else c
+            for c in cat_pivot.columns
+        ]
+        profiles["category_month"] = cat_pivot
+        
+    except Exception as e:
+        print(f"  Warning: could not compute category profiles — {e}")
+    
     return profiles
 
 
@@ -541,11 +701,23 @@ def build_feature_table(train_df, verbose=True, profile_source_df=None):
     if verbose:
         print("  Rolling features...")
     df = build_rolling_features(df, "Revenue")
-    df = build_rolling_features(df, "COGS", windows=[7, 14, 28, 90])
+    df = build_rolling_features(df, "COGS", windows=[7, 14, 28, 60, 90, 180, 365])
 
     if verbose:
         print("  Growth features...")
     df = build_growth_features(df, "Revenue")
+    df = build_growth_features(df, "COGS")
+
+    # Revenue-COGS spread features (margin dynamics)
+    if "Revenue" in df.columns and "COGS" in df.columns:
+        spread = df["Revenue"].shift(1) - df["COGS"].shift(1)
+        df["spread_lag1"] = spread
+        df["spread_rmean_7"] = spread.rolling(7, min_periods=1).mean()
+        df["spread_rmean_28"] = spread.rolling(28, min_periods=1).mean()
+        ratio = df["Revenue"].shift(1) / df["COGS"].shift(1).replace(0, np.nan)
+        df["margin_ratio_lag1"] = ratio
+        df["margin_ratio_rmean_7"] = ratio.rolling(7, min_periods=1).mean()
+        df["margin_ratio_rmean_28"] = ratio.rolling(28, min_periods=1).mean()
 
     if verbose:
         print("  Historical revenue profiles...")
@@ -565,8 +737,21 @@ def build_feature_table(train_df, verbose=True, profile_source_df=None):
         if key_col:
             df = merge_profiles(df, prof, key_col)
 
+    if verbose:
+        print("  Order-based profiles...")
+    order_profiles = compute_order_based_profiles()
+    for name, prof in order_profiles.items():
+        key_col = [c for c in prof.columns if c in df.columns]
+        if key_col:
+            df = merge_profiles(df, prof, key_col)
+
     # Combine all profiles for reuse at prediction time
-    all_profiles = {"__promotions__": promotions, **rev_profiles, **aux_profiles}
+    all_profiles = {
+        "__promotions__": promotions,
+        **rev_profiles,
+        **aux_profiles,
+        **order_profiles,
+    }
 
     if verbose:
         print(f"  Feature table: {df.shape[0]} rows × {df.shape[1]} cols")
@@ -599,8 +784,12 @@ def apply_profiles_to_dates(dates_df, profiles):
         "dom": "dayofmonth",
         "quarter": "quarter",
         "month_dow": ["month", "dayofweek"],
+        "month_weekend": ["month", "is_weekend"],
+        "margin_month": "month",
         "orders_dow": "dayofweek",
         "orders_month": "month",
+        "orders_month_dow": ["month", "dayofweek"],
+        "category_month": "month",
         "returns_month": "month",
         "traffic_dow": "dayofweek",
         "traffic_month": "month",

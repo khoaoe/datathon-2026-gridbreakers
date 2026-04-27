@@ -1,0 +1,8 @@
+{
+  "elapsed_sec": 779.8,
+  "candidate_path": "output/submissions/ex_31_refined_ensemble.csv",
+  "n_seeds": 3,
+  "n_features_rev": 144,
+  "n_features_cogs": 139,
+  "mean_score": 896732.7130425908
+}
