@@ -1,0 +1,11 @@
+{
+  "elapsed_sec": 735.4,
+  "candidate_path": "output/submissions/ex_45_quantile_stable.csv",
+  "quantile_alpha": 0.6,
+  "n_seeds": 3,
+  "n_features_rev": 144,
+  "n_features_cogs": 139,
+  "mean_cv_score": 1028276.1607578197,
+  "mean_rev_pred": 3764638.467372649,
+  "mean_cogs_pred": 3695400.5858854777
+}

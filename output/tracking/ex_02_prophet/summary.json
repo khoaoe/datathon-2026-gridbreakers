@@ -1,0 +1,16 @@
+{
+  "experiment": "ex_02_prophet",
+  "timestamp": "2026-04-20T12:59:59.207092",
+  "elapsed_sec": 124.2,
+  "params": {
+    "seasonality_mode": "multiplicative",
+    "changepoint_prior_scale": 0.05
+  },
+  "final_scores": {
+    "mae": 970753.1631402188,
+    "rmse": 1382517.725477076,
+    "r2": 0.3177726179148498
+  },
+  "total_steps": 0,
+  "notes": "COGS \u2014 MAE=866,049 RMSE=1,259,697 R\u00b2=0.2541\n"
+}

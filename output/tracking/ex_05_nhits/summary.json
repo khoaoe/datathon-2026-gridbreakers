@@ -1,0 +1,18 @@
+{
+  "experiment": "ex_05_nhits",
+  "timestamp": "2026-04-20T13:02:33.546085",
+  "elapsed_sec": 43.8,
+  "params": {
+    "model": "NHITS",
+    "input_size": 730,
+    "horizon": 548,
+    "max_steps": 1000
+  },
+  "final_scores": {
+    "mae": 563003.196669708,
+    "rmse": 762421.5368278718,
+    "r2": 0.7589884371940924
+  },
+  "total_steps": 0,
+  "notes": ""
+}

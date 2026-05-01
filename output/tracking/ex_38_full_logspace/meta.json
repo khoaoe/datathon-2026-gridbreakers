@@ -1,0 +1,11 @@
+{
+  "elapsed_sec": 733.1,
+  "candidate_path": "output/submissions/ex_38_full_logspace.csv",
+  "n_seeds": 3,
+  "n_features_rev": 144,
+  "n_features_cogs": 139,
+  "mean_score": 988523.5780816065,
+  "mean_bias_rev_pct": -16.870501819631908,
+  "mean_bias_cogs_pct": -2.487568467223955,
+  "transform": "full_log1p_preprocess"
+}

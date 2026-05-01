@@ -1,0 +1,10 @@
+{
+  "elapsed_sec": 774.4,
+  "candidate_path": "output/submissions/ex_32_drift_corrected.csv",
+  "n_seeds": 3,
+  "n_features_rev": 144,
+  "n_features_cogs": 139,
+  "avg_alpha": 0.3333333333333333,
+  "mean_score_raw": 896732.7130425908,
+  "mean_score_corrected": 878048.6753285242
+}

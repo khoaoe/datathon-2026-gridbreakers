@@ -1,0 +1,6 @@
+tag,pct_keep,rev_changed,cogs_changed,any_changed,rev_max_abs_delta,cogs_max_abs_delta,out_csv
+z7.0_k7.0_me0_pd0,0.47378032872423687,0,0,0,0.0,0.0,/home/pineapple/Desktop/projects/datathon-2026-gridbreakers/output/cleaning/sales_clean_z7.0_k7.0_me0_pd0.csv
+z6.5_k6.5_me1_pd1,0.6584920427863292,0,0,0,0.0,0.0,/home/pineapple/Desktop/projects/datathon-2026-gridbreakers/output/cleaning/sales_clean_z6.5_k6.5_me1_pd1.csv
+z6.5_k6.5_me1_pd0,0.48630315679624314,3,0,3,744358.335505005,0.0,/home/pineapple/Desktop/projects/datathon-2026-gridbreakers/output/cleaning/sales_clean_z6.5_k6.5_me1_pd0.csv
+z6.5_k6.5_me0_pd0,0.47378032872423687,4,1,4,744358.335505005,404759.6496619992,/home/pineapple/Desktop/projects/datathon-2026-gridbreakers/output/cleaning/sales_clean_z6.5_k6.5_me0_pd0.csv
+z6.0_k6.0_me0_pd0,0.47378032872423687,9,4,9,1964700.1466200054,996208.8346880004,/home/pineapple/Desktop/projects/datathon-2026-gridbreakers/output/cleaning/sales_clean_z6.0_k6.0_me0_pd0.csv

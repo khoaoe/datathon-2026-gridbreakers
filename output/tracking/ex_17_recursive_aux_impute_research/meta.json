@@ -1,0 +1,22 @@
+{
+  "elapsed_sec": 1013.0,
+  "best_method": "baseline_keep_avg",
+  "methods": [
+    "baseline_keep_avg",
+    "keep_avg_exo_zero",
+    "keep_avg_exo_profile"
+  ],
+  "folds": [
+    {
+      "name": "fold_2021",
+      "val_start": "2021-01-01",
+      "val_end": "2021-12-31"
+    },
+    {
+      "name": "fold_2022",
+      "val_start": "2022-01-01",
+      "val_end": "2022-12-31"
+    }
+  ],
+  "candidate_path": "output/submissions/ex_17_baseline_keep_avg.csv"
+}

@@ -1,0 +1,78 @@
+{
+  "elapsed_sec": 731.1,
+  "n_seeds": 3,
+  "base_w_sl": {
+    "Revenue": 0.15,
+    "COGS": 0.2
+  },
+  "horizon_buckets": [
+    [
+      1,
+      30
+    ],
+    [
+      31,
+      90
+    ],
+    [
+      91,
+      180
+    ],
+    [
+      181,
+      365
+    ],
+    [
+      366,
+      548
+    ]
+  ],
+  "bucket_damp": {
+    "1": 0.35,
+    "2": 0.3,
+    "3": 0.25,
+    "4": 0.2,
+    "5": 0.15
+  },
+  "mean_fold_score_base": 800637.8284119209,
+  "mean_fold_score_rectified": 820668.3734930176,
+  "prediction_diagnostics": {
+    "Revenue": {
+      "base_mean": 3757135.9652946386,
+      "rectified_mean": 3668307.2552323565,
+      "avg_abs_residual_correction": 109817.80180003692
+    },
+    "COGS": {
+      "base_mean": 3594468.0703935465,
+      "rectified_mean": 3546951.9864363,
+      "avg_abs_residual_correction": 79645.84198718579
+    }
+  },
+  "revenue_base_stats": {
+    "mean": 3757135.9652946386,
+    "growth_min": 1.0093110635946467,
+    "growth_max": 1.4382758619075353,
+    "growth_span": 0.4289647983128886,
+    "jan_growth": 1.1892635604185946,
+    "nov_growth": 1.4382758619075353,
+    "dec_growth": 1.3490564371802245
+  },
+  "revenue_rectified_stats": {
+    "mean": 3668307.2552323565,
+    "growth_min": 0.9732001559254668,
+    "growth_max": 1.3919078021162876,
+    "growth_span": 0.4187076461908208,
+    "jan_growth": 1.1506449678840942,
+    "nov_growth": 1.3919078021162876,
+    "dec_growth": 1.3109555076450408
+  },
+  "submissions": {
+    "base": "output/submissions/ex_53_rectify_base.csv",
+    "rectified": "output/submissions/ex_53_rectify_horizon_residual.csv",
+    "bridges": [
+      "output/submissions/ex_53_rectify_bridge_w10.csv",
+      "output/submissions/ex_53_rectify_bridge_w15.csv",
+      "output/submissions/ex_53_rectify_bridge_w20.csv"
+    ]
+  }
+}

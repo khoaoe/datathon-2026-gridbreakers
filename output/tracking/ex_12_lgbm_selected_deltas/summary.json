@@ -1,0 +1,38 @@
+{
+  "experiment": "ex_12_lgbm_selected_deltas",
+  "timestamp": "2026-04-20T17:28:28.296335",
+  "elapsed_sec": 187.2,
+  "params": {
+    "objective": "regression",
+    "metric": "mae",
+    "boosting_type": "gbdt",
+    "n_estimators": 3000,
+    "learning_rate": 0.03,
+    "max_depth": 8,
+    "num_leaves": 63,
+    "min_child_samples": 20,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "reg_alpha": 0.1,
+    "reg_lambda": 1.0,
+    "random_state": 42,
+    "verbose": -1,
+    "n_jobs": -1,
+    "n_features_revenue": 107,
+    "n_features_cogs": 86,
+    "n_train": 3468,
+    "n_val": 365,
+    "selected_deltas": [
+      "keep_promo_interactions",
+      "drop_unstable_aux_profiles",
+      "target_aligned_autoreg"
+    ]
+  },
+  "final_scores": {
+    "mae": 555892.6644398782,
+    "rmse": 752198.1006997362,
+    "r2": 0.7980461229487199
+  },
+  "total_steps": 6,
+  "notes": "COGS \u2014 MAE=472,320 RMSE=645,199 R\u00b2=0.8043\nSelected FE deltas: promo interactions + target alignment + drop avg_* aux profiles\n"
+}

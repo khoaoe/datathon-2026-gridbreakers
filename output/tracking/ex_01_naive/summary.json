@@ -1,0 +1,13 @@
+{
+  "experiment": "ex_01_naive",
+  "timestamp": "2026-04-20T12:57:41.888580",
+  "elapsed_sec": 0.0,
+  "params": {},
+  "final_scores": {
+    "mae": 837704.0917808219,
+    "rmse": 1161819.0014722333,
+    "r2": 0.51820234689425
+  },
+  "total_steps": 0,
+  "notes": "Best baseline: Seasonal Naive\n"
+}

@@ -1,0 +1,12 @@
+{
+  "elapsed_sec": 1217.7,
+  "candidate_path": "output/submissions/ex_35_final_pipeline.csv",
+  "has_xgb": true,
+  "n_models_per_target": 6,
+  "n_features_rev": 144,
+  "n_features_cogs": 139,
+  "alpha_rev": 1.0,
+  "alpha_cogs": 1.0,
+  "mean_score_raw": 930408.1008991563,
+  "mean_score_corrected": 917633.9842774528
+}

@@ -1,0 +1,30 @@
+{
+  "elapsed_sec": 894.4,
+  "mean_ens_score": 752845.6018847099,
+  "fold_results": [
+    {
+      "fold": "fold_2021",
+      "best_path": "D_pure",
+      "best_single_score": 716357.9838118816,
+      "best_ens_score": 715529.4518880544,
+      "weights": [
+        0.0,
+        0.0,
+        0.1,
+        0.9
+      ]
+    },
+    {
+      "fold": "fold_2022",
+      "best_path": "D_pure",
+      "best_single_score": 790782.2086757536,
+      "best_ens_score": 790161.7518813653,
+      "weights": [
+        0.1,
+        0.0,
+        0.0,
+        0.9
+      ]
+    }
+  ]
+}

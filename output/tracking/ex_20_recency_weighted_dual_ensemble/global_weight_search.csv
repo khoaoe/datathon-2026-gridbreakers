@@ -1,0 +1,2 @@
+revenue_solver,revenue_objective,cogs_solver,cogs_objective,std_penalty,weight_shrink_l2,w_rev_core_v3_like,w_cogs_core_v3_like,w_rev_aligned_keep_avg,w_cogs_aligned_keep_avg,w_rev_aligned_no_profiles,w_cogs_aligned_no_profiles,w_rev_naive_lag365,w_cogs_naive_lag365
+dirichlet_random+scipy_slsqp,573278.9431159389,dirichlet_random+scipy_slsqp,514520.6162168352,0.08,0.01,0.23256717327905588,0.06167455561101108,0.3153757195540356,0.6510979924238633,0.3780217506041501,0.06877053246686088,0.07403535656275845,0.2184569194982647

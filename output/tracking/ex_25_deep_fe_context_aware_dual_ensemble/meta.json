@@ -1,0 +1,56 @@
+{
+  "elapsed_sec": 2116.6,
+  "components": [
+    "core_v3_like",
+    "aligned_keep_avg",
+    "aligned_no_profiles",
+    "aligned_recency_profiles",
+    "naive_lag365"
+  ],
+  "model_components": [
+    "aligned_keep_avg",
+    "aligned_no_profiles",
+    "aligned_recency_profiles",
+    "core_v3_like"
+  ],
+  "folds": [
+    {
+      "name": "fold_2020",
+      "val_start": "2020-01-01",
+      "val_end": "2020-12-31"
+    },
+    {
+      "name": "fold_2021",
+      "val_start": "2021-01-01",
+      "val_end": "2021-12-31"
+    },
+    {
+      "name": "fold_2022",
+      "val_start": "2022-01-01",
+      "val_end": "2022-12-31"
+    }
+  ],
+  "fold_recency_weights": {
+    "fold_2020": 0.2,
+    "fold_2021": 0.3,
+    "fold_2022": 0.5
+  },
+  "candidate_path": "output/submissions/ex_25_deep_fe_context_aware_dual_ensemble.csv",
+  "anchor_path": "output/submissions/ex_24_bridge_w01.csv",
+  "robust_std_penalty": 0.08,
+  "weight_shrink_l2": 0.01,
+  "weights_revenue": {
+    "core_v3_like": 0.21095993616639833,
+    "aligned_keep_avg": 2.2496124802019796e-06,
+    "aligned_no_profiles": 0.16403662785735856,
+    "aligned_recency_profiles": 0.49086797834036033,
+    "naive_lag365": 0.13413320802340256
+  },
+  "weights_cogs": {
+    "core_v3_like": 0.1627859137485286,
+    "aligned_keep_avg": 0.4222211541526749,
+    "aligned_no_profiles": 0.051842341233575576,
+    "aligned_recency_profiles": 0.002884602495011926,
+    "naive_lag365": 0.3602659883702092
+  }
+}

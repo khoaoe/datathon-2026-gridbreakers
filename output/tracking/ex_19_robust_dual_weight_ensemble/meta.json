@@ -1,0 +1,54 @@
+{
+  "elapsed_sec": 1672.7,
+  "components": [
+    "core_v3_like",
+    "aligned_keep_avg",
+    "aligned_drop_avg",
+    "aligned_no_profiles",
+    "naive_lag365",
+    "naive_lag365_lag7_blend"
+  ],
+  "model_components": [
+    "aligned_drop_avg",
+    "aligned_keep_avg",
+    "aligned_no_profiles",
+    "core_v3_like"
+  ],
+  "folds": [
+    {
+      "name": "fold_2020",
+      "val_start": "2020-01-01",
+      "val_end": "2020-12-31"
+    },
+    {
+      "name": "fold_2021",
+      "val_start": "2021-01-01",
+      "val_end": "2021-12-31"
+    },
+    {
+      "name": "fold_2022",
+      "val_start": "2022-01-01",
+      "val_end": "2022-12-31"
+    }
+  ],
+  "candidate_path": "output/submissions/ex_19_robust_dual_weight_ensemble.csv",
+  "anchor_path": "output/submissions/ex_18_ensemble_step.csv",
+  "robust_std_penalty": 0.1,
+  "weight_shrink_l2": 0.02,
+  "weights_revenue": {
+    "core_v3_like": 0.2718064271967236,
+    "aligned_keep_avg": 0.38183296126161353,
+    "aligned_drop_avg": 0.008009972879957833,
+    "aligned_no_profiles": 0.13665952149956134,
+    "naive_lag365": 0.1868823394640304,
+    "naive_lag365_lag7_blend": 0.014808777698113423
+  },
+  "weights_cogs": {
+    "core_v3_like": 0.31460516190879,
+    "aligned_keep_avg": 0.465423339249219,
+    "aligned_drop_avg": 0.0051653070130737505,
+    "aligned_no_profiles": 0.0176953327298291,
+    "naive_lag365": 0.19238900073835935,
+    "naive_lag365_lag7_blend": 0.004721858360728605
+  }
+}
