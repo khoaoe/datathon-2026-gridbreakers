@@ -80,7 +80,7 @@ Kiểm tra dữ liệu và thực hiện code để tìm đáp án cho 10 câu h
 4. **Hành vi khách hàng RFM × địa lý** — miền Trung có AOV cao nhất (+14,5%) nhưng thị phần thấp; 27,7% khách Never Purchased
 5. **Giao hàng × đánh giá** — tốc độ giao hàng chênh lệch chỉ 0,013 sao; driver thật sự là chất lượng sản phẩm
 
->**Lưu ý**: sử dụng biểu đồ tương tác (Interactive Visualizations) được xây dựng hoàn toàn bằng thư viện **Plotly** nhằm thay thế Tableau, giúp duy trì tính nhất quán của data pipeline trực tiếp trên Python Notebook.
+>**Lưu ý**: Sử dụng toàn bộ là biểu đồ tương tác (Interactive Visualizations), được xây dựng bằng thư viện **Plotly** nhằm thay thế Tableau, giúp duy trì tính nhất quán của data pipeline trực tiếp trên Python Notebook.
 
 ### Phần 3: Mô hình Dự báo Doanh thu (Sales Forecasting)
 
