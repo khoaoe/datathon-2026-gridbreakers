@@ -1,7 +1,8 @@
-# Datathon 2026 — The Gridbreakers
+# Datathon 2026 — The Gridbreakers (VinTelligence)
 
 > Phân tích dữ liệu thương mại điện tử thời trang Việt Nam & dự báo doanh thu/giá vốn hàng ngày  
-> **Đội thi:** The Gridbreakers · **Cuộc thi:** VinTelligence Datathon 2026 · Vòng 1
+> **Cuộc thi:** VinTelligence Datathon 2026 - The Gridbreakers · Vòng 1
+> **Đội thi:** *Liên Minh Gridbreakers: Những Kẻ Tái Định Nghĩa Thực Tại Dữ Liệu và Kiến Tạo Tương Lai Cho Doanh Nghiệp*
 
 ---
 
@@ -106,28 +107,6 @@ cd report && python generate_all_explainability.py
 
 ---
 
-## Dữ liệu
-
-Bộ dữ liệu bao gồm **15 bảng quan hệ** về thương mại điện tử thời trang Việt Nam, giai đoạn 2012–2022:
-
-| Nhóm | Bảng | Số bản ghi | Mô tả |
-|------|------|-----------|-------|
-| **Master** | `products.csv` | 2.412 | Sản phẩm (category, segment, size, color, price, cogs) |
-| | `customers.csv` | 121.930 | Khách hàng (demographics, acquisition channel) |
-| | `promotions.csv` | 10 | Chương trình khuyến mãi (type, discount, duration) |
-| | `geography.csv` | — | Phân vùng địa lý (zip → city → district → region) |
-| **Operations** | `orders.csv` | 646.945 | Đơn hàng (status, amount, shipping fee) |
-| | `order_items.csv` | 714.669 | Chi tiết đơn hàng (quantity, promo, discount) |
-| | `payments.csv` | — | Thanh toán (method, amount) |
-| | `shipments.csv` | — | Vận chuyển (courier, cost, status) |
-| | `returns.csv` | — | Hoàn trả (reason, refund amount) |
-| | `reviews.csv` | — | Đánh giá (rating 1–5, title, text) |
-| **Inventory** | `inventory.csv` | 60.247 | Tồn kho (stock, stockout days, sell-through rate) |
-| **Web traffic** | `web_traffic.csv` | 3.652 ngày | Lưu lượng truy cập (sessions, bounce rate, CR) |
-| **Target** | `sales.csv` | — | Doanh thu & giá vốn hàng ngày (train) |
-| | `sample_submission.csv` | 548 ngày | Ngày cần dự báo (01/2023 – 07/2024) |
-
----
 
 ## Thành viên
 
