@@ -57,7 +57,18 @@ datathon-2026-gridbreakers/
 
 ## Phương pháp
 
-### Phân tích khám phá (EDA)
+### Phần 1: Câu hỏi Trắc nghiệm
+
+**File thực hiện**: `notebook/01_MCQ_Answers.ipynb`
+
+Kiểm tra dữ liệu và thực hiện code để tìm đáp án cho 10 câu hỏi trắc nghiệm.
+
+### Phần 2: Trực quan hoá và Phân tích Dữ liệu
+
+**File thực hiện**:
+
+- `notebook/02_EDA.ipynb`
+- `notebook/02_Data_Storytelling.ipynb`
 
 5 chủ đề phân tích, mỗi chủ đề kết hợp 3–4 bảng dữ liệu theo khung Descriptive → Diagnostic → Predictive → Prescriptive:
 
@@ -67,7 +78,9 @@ datathon-2026-gridbreakers/
 4. **Hành vi khách hàng RFM × địa lý** — miền Trung có AOV cao nhất (+14,5%) nhưng thị phần thấp; 27,7% khách Never Purchased
 5. **Giao hàng × đánh giá** — tốc độ giao hàng chênh lệch chỉ 0,013 sao; driver thật sự là chất lượng sản phẩm
 
-### Hệ thống dự báo
+### Phần 3: Mô hình Dự báo Doanh thu (Sales Forecasting)
+
+**Source code chính**: `03_Forecasting/ex_03_lgbm.py` (EX-03: LightGBM recursive + FE v2)
 
 | Giai đoạn | Mô tả | MAE |
 |-----------|-------|-----|
