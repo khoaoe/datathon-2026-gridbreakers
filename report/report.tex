@@ -28,103 +28,22 @@
 \maketitle
 
 % ============================================================
+% ABSTRACT
+% ============================================================
 \begin{abstract}
-Báo cáo này trình bày kết quả nghiên cứu của đội Gridbreakers tại Vòng 1
-VinTelligence Datathon 2026, triển khai trên tập dữ liệu kinh doanh mười năm
-(2012--2022) của một doanh nghiệp thời trang thương mại điện tử tại Việt Nam.
-Nghiên cứu được tổ chức theo hai trục chính. \textbf{Thứ nhất}, phân tích
-kinh doanh toàn diện (EDA) định lượng năm nhóm vấn đề tồn đọng cốt lõi: cấu
-trúc lợi nhuận mỏng do chính sách khuyến mãi phá giá (COGS/doanh thu vượt
-100\% ở nhóm hàng giảm giá), rủi ro tập trung danh mục vào dòng
-\texttt{Streetwear}, nghịch lý tồn kho vừa thiếu hụt cục bộ vừa ứ đọng theo
-mùa, suy giảm năng lực thu hút khách hàng mới kể từ sau năm 2018, và tỷ lệ
-hoàn trả 5,57\% chưa được xử lý ở gốc rễ. Từ các phát hiện này, nghiên cứu
-đề xuất năm nhóm quyết định kinh doanh ưu tiên có lộ trình triển khai hai
-giai đoạn rõ ràng. \textbf{Thứ hai}, hệ thống dự báo doanh thu và giá vốn
-hàng ngày theo tầm nhìn 548 ngày được xây dựng trên kiến trúc
-\textbf{LightGBM} với bộ đặc trưng kỹ nghệ sâu, bao gồm hàm khoảng cách chu
-kỳ nghỉ lễ liên tục, phân rã sự kiện ngày đôi ba pha, và đặc trưng đệ quy
-dài hạn (\texttt{lag\_365}, \texttt{lag\_183}). Để kiểm soát sự tích lũy sai
-số đệ quy trên chuỗi dự báo dài, hệ thống áp dụng kiến trúc lai
-\textit{bridge blending} kết hợp 85\% mô hình đệ quy sâu và 15\% mô hình phi
-trạng thái. Mô hình tốt nhất đạt \textbf{MAE = 791,764 VND} trên leaderboard
-công khai, cải thiện 36,5\% so với naive baseline (1,247,026 VND).
+Nghiên cứu phân tích toàn diện dữ liệu kinh doanh mười năm (2012--2022) của một doanh nghiệp thời trang thương mại điện tử tại Việt Nam, triển khai song song hai hướng: phân tích kinh doanh và dự báo chuỗi thời gian. Về phía phân tích, nghiên cứu định lượng năm nhóm vấn đề tồn đọng cốt lõi bao gồm cấu trúc lợi nhuận mỏng do khuyến mãi phá giá, rủi ro tập trung danh mục sản phẩm, nghịch lý tồn kho theo mùa, suy giảm tăng trưởng khách hàng mới và tỷ lệ hoàn trả dai dẳng; từ đó đề xuất lộ trình can thiệp chiến lược hai giai đoạn. Về phía mô hình, hệ thống dự báo doanh thu và giá vốn 548 ngày được xây dựng trên \texttt{LightGBM} với kỹ nghệ đặc trưng chuyên sâu và kiến trúc lai \texttt{bridge blending} kiểm soát tích lũy sai số đệ quy, đạt \texttt{MAE = 791,764 VND}, cải thiện 36,5\% so với baseline.
 \end{abstract}
 
 % ============================================================
 % EDA
 % ============================================================
-\section{Trực quan hóa và phân tích dữ liệu}
-\label{sec:eda}
-
-\subsection{Phân tích kết quả kinh doanh sau các năm}
-
-Trong suốt mười năm hoạt động (2012-2022), doanh nghiệp trải qua hai giai đoạn rõ rệt với \textbf{đỉnh điểm doanh thu và quy mô kinh doanh vào năm 2016}. Sau thời kỳ tăng trưởng mạnh mẽ ban đầu, hoạt động kinh doanh bắt đầu chững lại và \textbf{sụt giảm đáng kể từ sau năm 2019}, chạm đáy vào năm 2021 trước khi có dấu hiệu hồi phục nhẹ vào năm 2022 (Hình~\ref{fig:2.1}).
-
-Biên lợi nhuận gộp trung bình năm duy trì ở mức \textbf{13,8\%}, tuy nhiên con số này không phản ánh hết những rủi ro tiềm ẩn khi nhìn vào biến động hàng tháng. Doanh thu và giá vốn hàng bán của doanh nghiệp luôn đạt điểm cao nhất vào các \textbf{tháng 4, 5, 6} của năm. Điểm cần đặc biệt lưu ý là \textbf{tính mùa vụ cực kỳ gay gắt} với các đợt sụt giảm lợi nhuận xuống mức âm diễn ra theo chu kỳ \textbf{hai năm một lần}, thường rơi vào \textbf{tháng 8} (Hình~\ref{fig:2.2}).
-
-Điều này cho thấy có vấn đề trong \textbf{giá vốn hàng bán}, khiến giá vốn nhiều khi vượt cả doanh thu và \textbf{trực tiếp bào mòn hiệu quả kinh doanh bền vững} của công ty.
-
-\subsection{Phân tích các nhân tố thúc đẩy hoạt động kinh doanh}
-
-\subsubsection{Doanh thu hàng bán}
-
-Đối với doanh nghiệp thời trang thương mại điện tử, doanh thu chính đến từ việc bán hàng của mình. Hoạt động bán hàng của doanh nghiệp ghi nhận sự biến động mạnh mẽ về chiến lược khi \textbf{quy mô đơn hàng sụt giảm nhưng giá trị mỗi đơn lại tăng cao}. Trụ cột chính xuyên suốt các năm là dòng hàng \texttt{streetwear}, đạt đỉnh cao về doanh thu vào năm 2016 trước khi bước vào giai đoạn thu hẹp và ổn định ở mức thấp hơn từ sau năm 2018. Đáng lưu ý là sự dịch chuyển sâu sắc trong cơ cấu phân khúc, khi các sản phẩm mang tính \textbf{cân bằng dần chiếm tỷ trọng áp đảo}, lên tới gần một nửa tổng doanh thu vào năm 2022, thay thế cho các dòng hàng thông dụng vốn chiếm ưu thế trong giai đoạn đầu. Nhìn vào nhịp độ hằng tháng, tính thời vụ hiện lên rất rõ với các điểm bùng nổ doanh số thường tập trung vào \textbf{tháng 5 và tháng 10}. Điểm cần chú trọng đặc biệt là \textbf{sự tồn tại của quá nhiều tổ hợp màu sắc và kích cỡ gần như không mang lại doanh thu}, trong khi dòng tiền chỉ tập trung cục bộ vào một vài lựa chọn nhất định như cỡ \texttt{XL} màu \texttt{tím}, \texttt{bạc} hoặc cỡ \texttt{L} và \texttt{S} màu \texttt{xanh lá}. Việc giá bán trung bình tăng vọt trong những năm gần đây dù giúp duy trì tổng doanh thu nhưng lại đi kèm với sự \textbf{sụt giảm lớn về lượng đơn hàng}, đòi hỏi doanh nghiệp phải cân nhắc kỹ khả năng giữ chân khách hàng trong dài hạn. Ngoài ra, có một điểm đáng chú ý khi quan sát số lượng đơn hàng trung bình trong phân khúc \texttt{Outdoor} lại thường tăng lên mạnh vào \textbf{tháng 12}, có thể vì các dịp lễ vào cuối năm.
-
-\paragraph{Chi phí giá vốn hàng bán của doanh nghiệp}
-Giá vốn hàng bán của doanh nghiệp trong giai đoạn từ 2012 đến 2022 có sự biến động lớn và \textbf{đạt đỉnh điểm vào năm 2016 với giá trị khoảng 1,78 tỷ đồng}. Nhóm hàng \texttt{thời trang đường phố} luôn đóng vai trò là danh mục chiếm tỷ trọng chi phí cao nhất trong suốt quá trình hoạt động. Một điểm cần đặc biệt lưu ý là \textbf{tỷ lệ giá vốn so với doanh thu duy trì ở mức rất cao}, thường xuyên vượt ngưỡng \textbf{80\%} và thậm chí chạm mốc \textbf{92\%} ở các nhóm hàng chủ lực như \texttt{thời trang đường phố} và \texttt{hàng thông dụng} vào các năm 2014, 2017 và 2021. Điều này cho thấy \textbf{biên lợi nhuận của doanh nghiệp rất mỏng} và dễ bị tổn thương trước các biến động chi phí. Tuy nhiên, nhóm sản phẩm cho \texttt{giới trẻ} lại thể hiện sự ổn định và hiệu quả hơn khi luôn giữ được tỷ lệ chi phí thấp nhất và có xu hướng cải thiện rõ rệt xuống \textbf{dưới mức 80\%} vào cuối năm 2022. Sự trồi sụt mạnh mẽ của tỷ lệ này theo từng năm và từng tháng cho thấy hoạt động kinh doanh đang đối mặt với \textbf{thách thức lớn trong việc tối ưu hóa giá vốn} hoặc đang chịu tác động tiêu cực từ các chương trình khuyến mãi quá mạnh tay, làm giảm giá trị thực thu trên mỗi sản phẩm bán ra.
-
-\paragraph{Chi phí giá vốn hàng bán và khuyến mãi}
-Hoạt động kinh doanh của doanh nghiệp trong giai đoạn mười năm qua cho thấy một sự \textbf{phụ thuộc đáng báo động vào các chương trình khuyến mãi} để duy trì doanh số, với tỷ lệ thường duy trì ở mức \textbf{6-4}, với \textbf{60\%} dành cho doanh thu không khuyến mãi và \textbf{40\%} doanh thu khuyến mãi. Trong khi các đơn hàng tự nhiên mang lại biên lợi nhuận ổn định ở mức khoảng \textbf{20\%}, thì các đơn hàng có áp dụng khuyến mãi lại liên tục \textbf{ghi nhận lợi nhuận âm từ 10\% đến 20\%}. Điểm cần đặc biệt chú ý là tỷ lệ giá vốn hàng bán trên doanh thu thuần của nhóm hàng khuyến mãi \textbf{thường xuyên vượt ngưỡng 100\%}, có nghĩa là doanh nghiệp đang \textbf{bán hàng với giá thấp hơn cả chi phí sản xuất} hoặc nhập hàng gốc. Với việc doanh thu đến từ không khuyến mãi luôn duy trì lớn hơn 50\% giúp cho doanh nghiệp có thể có lời trong suốt thời gian trên.
-
-Tổng chi phí giá vốn hàng bán đã đạt đỉnh vào năm 2016 với giá trị hơn 1,78 tỷ đồng, với danh mục \texttt{thời trang đường phố} luôn chiếm tỷ trọng chi phí lớn nhất. Việc duy trì cường độ giảm giá sâu, đặc biệt là ở nhóm \texttt{đồ dã ngoại} với mức chiết khấu từ \textbf{5\% đến 7\%}, đang trực tiếp \textbf{bào mòn lợi nhuận và sức khỏe tài chính} của công ty qua từng năm. Doanh nghiệp cần xem xét lại chiến lược kích cầu này vì việc \textbf{tăng trưởng đơn hàng thông qua khuyến mãi đang gây ra những tổn thất trực tiếp} trên mỗi sản phẩm bán ra.
-
-\subsubsection{Khía cạnh vận hành của doanh nghiệp}
-
-\paragraph{Doanh thu hàng bán theo địa lý}
-Bức tranh kinh doanh theo địa lý cho thấy \textbf{sự phát triển rõ rệt của vùng phía đông}, với trọng tâm là các thành phố lớn như Hà Nội, Hải Phòng, Hạ Long và Việt Trì. Mặc dù đây là khu vực dẫn đầu về cả khối lượng đơn hàng và tổng doanh thu, nhưng \textbf{quy mô bán hàng tại đây cũng như trên toàn quốc đã chứng kiến sự sụt giảm mạnh} sau giai đoạn hoàng kim 2015–2016. Điểm cần đặc biệt lưu tâm là sự \textbf{mâu thuẫn giữa số lượng đơn hàng và hiệu quả tài chính}; trong khi số đơn giảm sâu thì \textbf{giá trị trung bình trên mỗi đơn hàng lại tăng trưởng bền vững} qua các năm. \textbf{Vùng phía tây hiện vẫn là mắt xích yếu nhất} khi đóng góp tỷ trọng doanh thu thấp nhất và có mức chi tiêu trên mỗi đơn hàng khiêm tốn nhất so với hai vùng còn lại. Dòng hàng \texttt{streetwear} duy trì vị thế là trụ cột doanh thu tại mọi khu vực, tuy nhiên đà \textbf{sụt giảm của danh mục này từ sau năm 2018} cho thấy thị trường đang có sự điều chỉnh lớn về nhu cầu hoặc định hướng phân khúc khách hàng.
-
-\paragraph{Chi phí theo địa lý và logistic}
-Hiệu quả vận hành và chi phí giao nhận của doanh nghiệp trong mười năm qua ghi nhận nhiều chuyển biến tích cực, đặc biệt là \textbf{xu hướng giảm dần của các khoản chi phí vận tải qua từng năm}. Tổng thời gian giao nhận từ lúc khách đặt đến khi nhận hàng có \textbf{giá trị trung vị là 6 ngày}, với một số trường hợp kéo dài tới 9 ngày. Đáng chú ý là tốc độ xử lý đơn hàng tại kho được duy trì khá đồng đều giữa các vùng ở mức khoảng \textbf{1,5 ngày}, điều này cho thấy phần lớn thời gian chờ đợi của khách hàng nằm ở \textbf{khâu vận chuyển thực tế trên đường}. Về mặt chi phí, \textbf{phí giao hàng trung bình toàn quốc đã giảm mạnh} từ mức trên 6 đồng vào năm 2012 xuống còn dưới 4 đồng vào năm 2022, minh chứng cho việc \textbf{tối ưu hóa mạng lưới phân phối ngày càng hiệu quả}. Trong quá khứ, vùng phía tây từng là khu vực tiêu tốn nhiều chi phí logistics nhất với đỉnh điểm vào năm 2013, nhưng hiện nay \textbf{mức chi phí giữa các vùng đã dần được kéo về mức tương đương nhau}. Điểm cần chú ý cuối cùng là dù tỷ lệ giao hàng thành công luôn chiếm đa số, doanh nghiệp vẫn phải đối mặt với một \textbf{tỷ lệ đơn hàng bị hủy và trả lại ổn định}, vốn là những yếu tố trực tiếp làm \textbf{tăng chi phí vận hành và giảm hiệu quả kinh doanh chung}.
-
-\paragraph{Vấn đề về việc trả hàng của doanh nghiệp}
-Hoạt động hậu mãi của doanh nghiệp ghi nhận \textbf{tỉ lệ trả hàng tổng thể ở mức 5,57\%}, trong đó vấn đề nhức nhối nhất nằm ở việc \textbf{khách hàng mua sai kích cỡ sản phẩm}. Đây không chỉ là lý do phổ biến nhất mà còn là tác nhân chính gây thất thoát doanh thu, với \textbf{số tiền hoàn trả cho mục này đạt đỉnh điểm vào năm 2016}. Đáng chú ý là tỉ lệ trả hàng do sai kích cỡ luôn duy trì ở mức cao \textbf{trên 2\% trong suốt giai đoạn từ 2012 đến 2017} trước khi có xu hướng giảm nhẹ và đi ngang quanh mốc 2\% vào những năm cuối. Ngoài sai sót về kích thước, các yếu tố như \textbf{hàng lỗi và sản phẩm không đúng mô tả cũng đóng góp đáng kể} vào tỉ trọng trả hàng, trong khi lỗi vận chuyển chậm lại chiếm tỉ lệ thấp nhất và khá ổn định qua các năm. \textbf{Tổng lượng đơn hàng bị trả lại có sự biến động tương đồng với nhịp độ kinh doanh chung}, tăng mạnh và đạt đỉnh vào năm 2016 rồi sụt giảm rõ rệt từ sau năm 2018. Điểm cần đặc biệt lưu tâm là dù quy mô đơn hàng tổng thể có giảm đi trong những năm gần đây, doanh nghiệp vẫn \textbf{chưa thực sự giải quyết triệt để được gốc rễ của vấn đề sai kích cỡ và hàng lỗi}, vốn là những rào cản lớn nhất ảnh hưởng đến trải nghiệm khách hàng và \textbf{trực tiếp bào mòn lợi nhuận} của công ty.
-
-\paragraph{Khả năng vận hành nền tảng số của doanh nghiệp}
-Khả năng vận hành nền tảng số của doanh nghiệp trong giai đoạn từ 2012 đến 2022 ghi nhận \textbf{sự tăng trưởng mạnh mẽ về quy mô truy cập nhưng đang đối mặt với thách thức lớn về hiệu quả chuyển đổi} ở những năm cuối. Trong suốt mười năm, số lượng phiên truy cập hàng tháng có \textbf{mối tương quan thuận khá rõ nét với doanh thu thuần}, cho thấy việc thu hút người dùng ghé thăm website vẫn là động lực chính thúc đẩy dòng tiền. Tuy nhiên, điểm cần đặc biệt lưu ý là \textbf{khối lượng đơn hàng trên tất cả các loại thiết bị đã sụt giảm nghiêm trọng từ sau năm 2018}, mặc dù \textbf{điện thoại di động luôn duy trì vị thế là công cụ đặt hàng chủ lực}, vượt xa máy tính và máy tính bảng. Điều này cũng diễn ra tương tự với việc \textbf{số lượng truy cập không còn tương quan mạnh với doanh thu kể từ 2019 trở đi}, khi số doanh thu mô hình chung vẫn có tương quan dương với số lượng truy cập nhưng không còn mạnh như trước.
-
-Về nguồn gốc người dùng, \textbf{kênh tìm kiếm tự nhiên và tìm kiếm có trả phí đóng vai trò then chốt} khi chiếm hơn một nửa tổng số lượt xem trang, minh chứng cho tầm quan trọng của việc quảng bá hình ảnh trên các công cụ tìm kiếm. Tính thời vụ trên nền tảng số hiện lên rất rõ khi \textbf{lưu lượng xem trang thường đạt đỉnh vào tháng 4 và tháng 6}, nhưng lại giảm sâu vào giai đoạn đầu năm và cuối năm. Một chỉ số vận hành quan trọng khác là \textbf{thời gian trung bình người dùng ở lại trên trang thường dao động từ 190 đến 240 giây}, nhưng những đợt bùng nổ về số lượng phiên truy cập không phải lúc nào cũng đi kèm với việc người dùng lưu lại lâu hơn. Sự lệch pha này cùng với đà giảm đơn hàng cho thấy doanh nghiệp cần \textbf{tập trung cải thiện trải nghiệm người dùng, đặc biệt là trên giao diện điện thoại}, để biến lưu lượng truy cập đông đảo thành doanh thu thực tế một cách hiệu quả hơn.
-
-\paragraph{Doanh thu hàng bán theo khách hàng}
-Hoạt động bán hàng trong mười năm qua chứng kiến một sự thay đổi mang tính bước ngoặt khi doanh nghiệp chuyển từ việc \textbf{khai thác khách hàng mới sang dựa vào tệp khách hàng cũ} để duy trì sự sống còn. Thời kỳ hoàng kim quanh năm 2016 ghi nhận sự bùng nổ doanh thu từ lượng khách hàng mới khổng lồ, nhưng kể từ sau năm 2018, \textbf{nguồn thu này sụt giảm mạnh} và đến năm 2022, \textbf{khách hàng trung thành đã chính thức trở thành nguồn đóng góp dòng tiền chính} cho công ty. Nhóm tuổi từ \textbf{25 đến 44}, đặc biệt là nam giới và nữ giới trong độ tuổi từ 25 đến 34, luôn duy trì vị thế là những nhóm mang lại giá trị kinh tế cao nhất. Điểm cần đặc biệt chú ý là \textbf{sức hút vượt trội của danh mục \texttt{thời trang đường phố} so với tất cả các nhóm hàng còn lại} trên mọi giới tính, cho thấy sự phụ thuộc rất lớn của doanh nghiệp vào một dòng sản phẩm duy nhất. Dù việc khai thác khách hàng cũ giúp ổn định doanh thu trong giai đoạn sụt giảm, nhưng \textbf{sự thiếu hụt khách hàng mới trong những năm gần đây là một tín hiệu cảnh báo} về khả năng mở rộng quy mô kinh doanh trong tương lai.
-
-\subsection{Phân tích các vấn đề tồn đọng của doanh nghiệp}
-
-\textbf{Thứ nhất, cấu trúc lợi nhuận mỏng và phụ thuộc vào khuyến mãi phá giá.} Biên lợi nhuận gộp trung bình chỉ đạt \textbf{13,8\%}, trong khi tỷ lệ COGS/doanh thu thường xuyên vượt ngưỡng \textbf{80\%} và đã chạm mức \textbf{92\%} (Hình~\ref{fig:2.10}) tại các nhóm hàng chủ lực. Đặc biệt nghiêm trọng, tỷ lệ này \textbf{vượt 100\%} đối với đơn hàng có khuyến mãi (Hình~\ref{fig:2.13}), đồng nghĩa doanh nghiệp đang bán dưới giá vốn. Với \textbf{40\% doanh thu} đến từ kênh khuyến mãi và biên lợi nhuận nhóm này ghi nhận âm từ 10--20\% (Hình~\ref{fig:2.11}, Hình~\ref{fig:2.12}), sức khỏe tài chính hiện tại chỉ được duy trì nhờ bù đắp chéo từ đơn hàng không khuyến mãi, một trạng thái thiếu bền vững về dài hạn.
-
-\textbf{Thứ hai, danh mục sản phẩm mất cân đối và rủi ro tập trung doanh thu.} Doanh thu phụ thuộc quá mức vào dòng hàng \texttt{Streetwear}, riêng dòng \texttt{Balance} đã chiếm gần \textbf{một nửa tổng doanh thu} vào năm 2022 (Hình~\ref{fig:2.5}). Ở cấp độ SKU, dòng tiền tập trung cục bộ vào một vài tổ hợp kích cỡ và màu sắc nhất định (Hình~\ref{fig:2.6}), trong khi phần lớn danh mục biến thể \textbf{gần như không tạo ra doanh thu}, tiêu tốn vốn lưu động và năng lực vận hành kho mà không tương xứng về giá trị tạo ra.
-
-\textbf{Thứ ba, nghịch lý tồn kho: vừa thiếu hụt cục bộ, vừa ứ đọng theo mùa.} Dù tỷ lệ đáp ứng đơn hàng đạt 95–96\% (Hình~\ref{fig:2.22}), tình trạng cháy hàng ở một số SKU nhu cầu cao lại xảy ra đồng thời với việc lượng nhập kho \textbf{vượt xa tốc độ tiêu thụ} từ tháng 4 đến tháng 8 hằng năm (Hình~\ref{fig:2.23}), đặc biệt ở hai danh mục chiến lược \texttt{Streetwear} và \texttt{Outdoor} (Hình~\ref{fig:2.24}). Sự bất đối xứng này phản ánh mô hình dự báo nhu cầu cứng nhắc, chưa được hiệu chỉnh theo sự thay đổi hành vi tiêu dùng sau 2018, đồng thời tạo áp lực thanh lý bằng khuyến mãi, trực tiếp khuếch đại vấn đề biên lợi nhuận đã nêu.
-
-\textbf{Thứ tư, suy giảm năng lực thu hút khách hàng mới và hiệu quả chuyển đổi số.} Kể từ sau năm 2018, doanh thu từ khách hàng mới sụt giảm mạnh, khiến khách hàng trung thành trở thành nguồn thu chủ đạo vào năm 2022 (Hình~\ref{fig:2.32}), dấu hiệu đặc trưng của chu kỳ co hẹp thị phần. Song song đó, doanh thu thực thu trên mỗi lượt truy cập số \textbf{giảm hơn một nửa} so với giai đoạn 2013–2018 (Hình~\ref{fig:2.27}), trong khi lưu lượng truy cập vẫn được duy trì, cho thấy vấn đề nằm ở sức hút thương hiệu và chất lượng trải nghiệm chuyển đổi, chứ không đơn thuần là năng lực tiếp cận thị trường.
-
-\textbf{Thứ năm, tỷ lệ hoàn trả chưa được giải quyết ở gốc rễ.} Tỷ lệ hoàn trả tổng thể ở mức \textbf{5,57\%}, với nguyên nhân hàng đầu là mua sai kích cỡ ($>$2\%), tiếp theo là hàng lỗi (1,3\%) và sản phẩm không đúng mô tả (1,1\%) (Hình~\ref{fig:2.25}). Đáng lo ngại, các tỷ lệ này \textbf{không cải thiện về cấu trúc} dù quy mô kinh doanh đã thu hẹp, phản ánh sự thiếu vắng cơ chế cải tiến liên tục trong kiểm soát chất lượng và trải nghiệm mua sắm số.
-
-\subsection{Đề xuất các quyết định kinh doanh}
-
-\textbf{Thứ nhất, tái cấu trúc chính sách khuyến mãi theo hướng bảo vệ biên lợi nhuận.} Doanh nghiệp cần thiết lập ngưỡng sàn biên lợi nhuận bắt buộc cho mọi chương trình khuyến mãi, nghiêm cấm triển khai các đợt giảm giá đẩy COGS/doanh thu vượt mức 100\%. Thay thế chiến lược giảm giá đại trà bằng các hình thức kích cầu có kiểm soát hơn như \textbf{gói bundle sản phẩm}, \textbf{loyalty reward} hoặc \textbf{flash sale có giới hạn số lượng nghiêm ngặt}. Đối với nhóm hàng \texttt{Outdoor}, vốn đang gánh mức chiết khấu cao nhất mà không tạo ra tăng trưởng tương xứng, cần xem xét đưa về mức chiết khấu tối đa 3\% hoặc chuyển sang cơ chế ưu đãi phi giá (tặng kèm phụ kiện, bảo hành mở rộng).
-
-\textbf{Thứ hai, tối ưu hóa danh mục sản phẩm và hợp lý hóa SKU.} Doanh nghiệp cần tiến hành phân tích ABC/XYZ toàn bộ danh mục SKU để phân loại rõ ràng nhóm sinh lời, nhóm trung tính và nhóm tiêu hao vốn. Các tổ hợp màu sắc và kích cỡ không đạt ngưỡng doanh thu tối thiểu cần được \textbf{loại bỏ hoặc đưa vào thanh lý có kế hoạch} trong vòng hai quý tới. Đồng thời, doanh nghiệp nên chủ động phát triển dòng hàng \texttt{Outdoor} tại thị trường phía Tây, nơi hành vi tiêu dùng đang cho thấy nhu cầu tự nhiên cao hơn so với hai khu vực còn lại, nhằm giảm thiểu rủi ro tập trung một chiều vào \texttt{Streetwear}.
-
-\textbf{Thứ ba, triển khai hệ thống dự báo nhu cầu linh hoạt và cơ chế kiểm soát tồn kho động.} Để giải quyết nghịch lý tồn kho, doanh nghiệp cần chuyển từ mô hình nhập hàng theo kế hoạch cố định sang mô hình \textbf{dự báo nhu cầu cuốn chiếu (rolling forecast)} cập nhật hằng tháng dựa trên tốc độ tiêu thụ thực tế. Thiết lập ngưỡng cảnh báo tồn kho tự động theo danh mục và khu vực địa lý, đặc biệt kiểm soát chặt giai đoạn tháng 3–4, thời điểm lịch sử ghi nhận lượng nhập kho vượt mức cao nhất. Cơ chế phân bổ hàng hóa linh hoạt giữa ba vùng địa lý cũng cần được thiết lập để giảm thiểu tình trạng thiếu hụt cục bộ và ứ đọng cục bộ xảy ra đồng thời.
-
-\textbf{Thứ tư, đầu tư tái kích hoạt tăng trưởng khách hàng mới và nâng cao tỷ lệ chuyển đổi số.} Trong ngắn hạn, doanh nghiệp cần ưu tiên kiểm tra và tối ưu lại toàn bộ hành trình mua hàng trên thiết bị di động, kênh đặt hàng trọng yếu nhất, tập trung vào việc rút ngắn số bước thanh toán và cải thiện chất lượng mô tả sản phẩm. Về chiến lược trung hạn, cần thiết kế các chiến dịch thu hút khách hàng mới nhắm vào nhóm tuổi 25–34 tại các đô thị loại hai, thị trường còn nhiều dư địa khai thác, thông qua kênh tìm kiếm tự nhiên và tìm kiếm có trả phí, vốn đã chứng minh hiệu quả tiếp cận trong suốt mười năm qua. Song song đó, cần xây dựng chương trình \textbf{kích hoạt lại khách hàng ngủ đông (win-back campaign)} để tận dụng tệp dữ liệu khách hàng cũ đang bị bỏ ngỏ.
-
-\textbf{Thứ năm, thiết lập quy trình kiểm soát chất lượng và cải tiến trải nghiệm hậu mãi.} Để giải quyết tận gốc tỷ lệ hoàn trả do sai kích cỡ, vấn đề dai dẳng nhất, doanh nghiệp cần triển khai \textbf{công cụ tư vấn kích cỡ thông minh (size recommendation tool)} tích hợp trực tiếp vào trang sản phẩm, kết hợp với việc chuẩn hóa bảng đo kích thước thực tế theo từng dòng hàng. Đối với nhóm lỗi hàng (1,3\%) và sai mô tả (1,1\%), cần thiết lập quy trình kiểm định chất lượng đầu vào và kiểm duyệt nội dung sản phẩm trước khi đăng bán. Đây là các biện pháp có chi phí triển khai thấp nhưng tác động tích lũy cao khi áp dụng nhất quán trên toàn danh mục.
 
 
 
 % ============================================================
+% MODELING
+% ============================================================
+
 \section{Kiến trúc hệ thống dự báo}
 \label{sec:modeling}
 
