@@ -40,6 +40,7 @@ datathon-2026-gridbreakers/
 │   ├── 00_Data_QA_and_Integrity.ipynb # Kiểm tra chất lượng dữ liệu
 │   ├── 01_MCQ_Answers.ipynb           # PHẦN 1:Trả lời trắc nghiệm
 │   ├── 02_EDA.ipynb                   # PHẦN 2: Trực quan hóa và phân tích dữ liệu
+│   └── 02_Data_Storytelling.ipynb     # PHẦN 2: Kể câu chuyện kinh doanh bằng dữ liệu
 ├── output/
 │   ├── models/                    # Mô hình đã huấn luyện (pkl)
 │   ├── submissions/               # File nộp bài (CSV)
