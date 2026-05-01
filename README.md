@@ -1,9 +1,9 @@
 # Datathon 2026 — The Gridbreakers (VinTelligence)
 
 > Phân tích dữ liệu doanh nghiệp thương mại điện tử thời trang Việt Nam & dự báo Doanh thu/Giá vốn hàng ngày  
-> 
+>
 > **Cuộc thi:** VinTelligence Datathon 2026 - The Gridbreakers · Vòng 1
-> 
+>
 > **Đội thi:** *Liên Minh Gridbreakers: Những Kẻ Tái Định Nghĩa Thực Tại Dữ Liệu và Kiến Tạo Tương Lai Cho Doanh Nghiệp*
 
 ---
@@ -13,12 +13,13 @@
 Dự án này giải quyết ba phần thi của VinTelligence Datathon 2026:
 
 | Phần thi | Trọng số | Mô tả |
-|----------|----------|-------|
+| ---------- | ---------- | ------- |
 | Trắc nghiệm (MCQ) | 20 điểm | Kiến thức nền tảng về khoa học dữ liệu |
 | Phân tích khám phá (EDA) | 60 điểm | 5 chủ đề phân tích đa bảng, mỗi chủ đề kết hợp 3–4 bảng dữ liệu |
 | Dự báo doanh thu | 20 điểm | Dự báo doanh thu thuần & giá vốn hàng ngày cho 548 ngày (01/2023 – 07/2024) |
 
-**Kết quả chính:**
+**Kết quả chính**:
+
 - Leaderboard MAE tốt nhất: **791.764** (EX-51 Bridge w15)
 - Tổng tác động kinh doanh từ 6 đề xuất EDA: **≈255 triệu VND/năm** (21,8% doanh thu 2022)
 
@@ -26,7 +27,7 @@ Dự án này giải quyết ba phần thi của VinTelligence Datathon 2026:
 
 ## Cấu trúc thư mục
 
-```
+```text
 datathon-2026-gridbreakers/
 ├── data/                          # Dữ liệu gốc (15 bảng CSV)
 ├── data_cleaning/                 # Script tiền xử lý dữ liệu
@@ -87,14 +88,15 @@ Kiểm tra dữ liệu và thực hiện code để tìm đáp án cho 10 câu h
 **Source code chính**: `03_Forecasting/ex_03_lgbm.py` (EX-03: LightGBM recursive + FE v2)
 
 | Giai đoạn | Mô tả | MAE |
-|-----------|-------|-----|
+| ----------- | ------- | ----- |
 | Baseline | Naive seasonal average | 1.247.026 |
 | EX-03 | LightGBM recursive + FE v2 | 973.611 |
 | EX-22 | Deep FE + holiday distance features | 796.018 |
 | EX-24 | + Double date event decomposition | 795.838 |
 | **EX-51 Bridge w15** | **Hybrid: 85% recursive + 15% stateless** | **791.764** |
 
-**Kiến trúc lõi:**
+**Kiến trúc lõi**:
+
 - **LightGBM** với 100+ đặc trưng (lịch, Fourier, biến trễ, hồ sơ lịch sử, khuyến mãi)
 - **Bridge blending** — kết hợp mô hình đệ quy (giữ mức doanh thu cơ sở) với mô hình phi trạng thái (ổn định cấu trúc mùa vụ) để kiểm soát tích lũy sai số đệ quy
 - **SHAP explainability** — phân tích đóng góp đặc trưng qua SHAP values, LightGBM gain, beeswarm, và partial dependence
@@ -120,15 +122,20 @@ python -m 03_Forecasting.ex_03_lgbm
 
 # Tạo biểu đồ explainability
 cd report && python generate_all_explainability.py
+
+# (Tùy chọn) Chạy notebook EDA
+jupyter notebook notebook/02_EDA.ipynb
+jupyter notebook notebook/02_Data_Storytelling.ipynb
+# (nếu có lỗi từ plotly và kaleido ở 2 notebook trên, hãy chạy lệnh để cài đặt trình duyệt Chrome cho render hình ảnh tĩnh trong Plotly)
+plotly_get_chrome 
 ```
 
 ---
 
-
 ## Thành viên
 
 | Tên | Vai trò |
-|-----|---------|
+| ----- | --------- |
 | **Nguyễn Ngọc Khoa** | Trưởng đội · Modeling & Feature Engineering |
 | Nguyễn Thiên Ấn | EDA & Business Analysis |
 | Lê Công Minh | Data Cleaning & Visualization |
