@@ -1,47 +1,148 @@
-# DATATHON 2026
+# Datathon 2026 — The Gridbreakers
 
-Datathon 2026 here. VinTelligence make it. You be data scientist fashion e-commerce.
+> Phân tích dữ liệu thương mại điện tử thời trang Việt Nam & dự báo doanh thu/giá vốn hàng ngày  
+> **Đội thi:** The Gridbreakers · **Cuộc thi:** VinTelligence Datathon 2026 · Vòng 1
 
-## Challenge
-Three parts:
-1. MCQ - 20 points
-2. EDA - 60 points
-3. Revenue Model - 20 points
+---
 
-### Goal
-Predict daily revenue from Jan 1, 2023 to Jul 1, 2024. Use old data Jul 4, 2012 to Dec 31, 2022.
+## Tổng quan
 
-## Rules
-Test predictions against true revenue. Metrics:
-- MAE: Average error.
-- RMSE: Square root average squared error. Big error bad.
-- R2: Variance predicted.
+Dự án này giải quyết ba phần thi của VinTelligence Datathon 2026:
 
-File: Make CSV like `sample_submission.csv`. Need `Date` and `Revenue`.
+| Phần thi | Trọng số | Mô tả |
+|----------|----------|-------|
+| Trắc nghiệm (MCQ) | 20 điểm | Kiến thức nền tảng về khoa học dữ liệu |
+| Phân tích khám phá (EDA) | 60 điểm | 5 chủ đề phân tích đa bảng, mỗi chủ đề kết hợp 3–4 bảng dữ liệu |
+| Dự báo doanh thu | 20 điểm | Dự báo doanh thu thuần & giá vốn hàng ngày cho 548 ngày (01/2023 – 07/2024) |
 
-## Data Dictionary
-Data big. 5 parts.
+**Kết quả chính:**
+- Leaderboard MAE tốt nhất: **791.764** (EX-51 Bridge w15)
+- Tổng tác động kinh doanh từ 6 đề xuất EDA: **≈255 triệu VND/năm** (21,8% doanh thu 2022)
 
-### 1. Master Data
-- `products.csv`: Products. `product_id`, `product_name`, `category`, `segment`, `size`, `color`, `price`, `cogs`.
-- `customers.csv`: Customers. `customer_id`, `zip`, `city`, `signup_date`, `gender`, `age_group`, `acquisition_channel`.
-- `promotions.csv`: Deals. `promo_id`, `promo_name`, `promo_type`, `discount_value`, `start_date`, `end_date`, `applicable_category`.
-- `geography.csv`: Places. `zip`, `city`, `district`, `region`.
+---
 
-### 2. Operations
-- `orders.csv`: Orders. `order_id`, `customer_id`, status, time, amount, ship fee.
-- `order_items.csv`: Order items. Quantity, `promo_id`, discount.
-- `payments.csv`: Money. Date, method, amount.
-- `shipments.csv`: Boxes. Courier, level, cost, status.
-- `returns.csv`: Take back. Logs, reason.
-- `reviews.csv`: Stars. Rating 1-5, title, text.
+## Cấu trúc thư mục
 
-### 3. Inventory
-- `inventory.csv`: Stock. `stock_on_hand`, `units_received`, `units_sold`, `stockout_days`, sell rate, fill rate, flags.
+```
+datathon-2026-gridbreakers/
+├── data/                          # Dữ liệu gốc (15 bảng CSV)
+├── data_cleaning/                 # Script tiền xử lý dữ liệu
+├── modeling/                      # Mã nguồn hệ thống dự báo
+│   ├── config.py                  #   Cấu hình đường dẫn, siêu tham số
+│   ├── feature_engineering.py     #   Trích xuất đặc trưng v3 (875 dòng)
+│   ├── tracker.py                 #   Theo dõi thực nghiệm
+│   ├── utils.py                   #   Hàm tiện ích
+│   ├── ex_01_naive_baseline.py    #   EX-01: Naive seasonal baseline
+│   ├── ex_03_lgbm.py              #   EX-03: LightGBM recursive
+│   ├── ...                        #   52 biến thể thực nghiệm
+│   └── ex_52_recalibrated.py      #   EX-52: Monthly recalibration
+├── notebook/
+│   ├── 00_Data_QA_and_Integrity.ipynb   # Kiểm tra chất lượng dữ liệu
+│   ├── 01_MCQ_Answers.ipynb             # Trả lời trắc nghiệm
+│   ├── 02_Baseline_SalesForecasting.ipynb # Notebook dự báo doanh thu
+│   └── EDA.ipynb                        # Phân tích khám phá dữ liệu (5 chủ đề)
+├── output/
+│   ├── models/                    # Mô hình đã huấn luyện (pkl)
+│   ├── submissions/               # File nộp bài (CSV)
+│   └── tracking/                  # Log thực nghiệm
+├── report/
+│   ├── neurips_2025.tex           # Báo cáo chính (NeurIPS format)
+│   ├── shap_feature_importance.png
+│   ├── shap_beeswarm.png
+│   ├── lgbm_gain_importance.png
+│   └── shap_dependence_top4.png
+├── experiments.md                 # Nhật ký 52 thực nghiệm
+└── README.md
+```
 
-### 4. Web Traffic
-- `web_traffic.csv`: Site visits. `sessions`, `unique_visitors`, `page_views`, `bounce_rate`, `conversion_rate`.
+---
 
-### 5. Forecast Target
-- `sales.csv`: Old revenue. `Revenue`, `COGS`.
-- `sample_submission.csv`: Future target dates.
+## Phương pháp
+
+### Phân tích khám phá (EDA)
+
+5 chủ đề phân tích, mỗi chủ đề kết hợp 3–4 bảng dữ liệu theo khung Descriptive → Diagnostic → Predictive → Prescriptive:
+
+1. **Nghịch lý khuyến mãi** — cơ chế fixed discount xói mòn biên lợi nhuận gộp (−63,3% GM ở phân khúc Performance)
+2. **Tín hiệu số làm proxy doanh thu** — conversion rate và sessions là chỉ báo đồng thời (Pearson r = 0,44), không phải dự báo
+3. **Tồn kho: thời điểm, không phải số lượng** — 97,9% stockout chỉ kéo dài ≤2 ngày (transition-gap), trùng đỉnh Q2
+4. **Hành vi khách hàng RFM × địa lý** — miền Trung có AOV cao nhất (+14,5%) nhưng thị phần thấp; 27,7% khách Never Purchased
+5. **Giao hàng × đánh giá** — tốc độ giao hàng chênh lệch chỉ 0,013 sao; driver thật sự là chất lượng sản phẩm
+
+### Hệ thống dự báo
+
+| Giai đoạn | Mô tả | MAE |
+|-----------|-------|-----|
+| Baseline | Naive seasonal average | 1.247.026 |
+| EX-03 | LightGBM recursive + FE v2 | 973.611 |
+| EX-22 | Deep FE + holiday distance features | 796.018 |
+| EX-24 | + Double date event decomposition | 795.838 |
+| **EX-51 Bridge w15** | **Hybrid: 85% recursive + 15% stateless** | **791.764** |
+
+**Kiến trúc lõi:**
+- **LightGBM** với 100+ đặc trưng (lịch, Fourier, biến trễ, hồ sơ lịch sử, khuyến mãi)
+- **Bridge blending** — kết hợp mô hình đệ quy (giữ mức doanh thu cơ sở) với mô hình phi trạng thái (ổn định cấu trúc mùa vụ) để kiểm soát tích lũy sai số đệ quy
+- **SHAP explainability** — phân tích đóng góp đặc trưng qua SHAP values, LightGBM gain, beeswarm, và partial dependence
+
+---
+
+## Cài đặt & chạy
+
+```bash
+# Clone repository
+git clone https://github.com/khoaoe/datathon-2026-gridbreakers.git
+cd datathon-2026-gridbreakers
+
+# Tạo môi trường conda
+conda create -n datathon python=3.11 -y
+conda activate datathon
+
+# Cài đặt dependencies
+pip install -r requirements.txt
+
+# Chạy thực nghiệm chính
+python -m modeling.ex_03_lgbm
+
+# Tạo biểu đồ explainability
+cd report && python generate_all_explainability.py
+```
+
+---
+
+## Dữ liệu
+
+Bộ dữ liệu bao gồm **15 bảng quan hệ** về thương mại điện tử thời trang Việt Nam, giai đoạn 2012–2022:
+
+| Nhóm | Bảng | Số bản ghi | Mô tả |
+|------|------|-----------|-------|
+| **Master** | `products.csv` | 2.412 | Sản phẩm (category, segment, size, color, price, cogs) |
+| | `customers.csv` | 121.930 | Khách hàng (demographics, acquisition channel) |
+| | `promotions.csv` | 10 | Chương trình khuyến mãi (type, discount, duration) |
+| | `geography.csv` | — | Phân vùng địa lý (zip → city → district → region) |
+| **Operations** | `orders.csv` | 646.945 | Đơn hàng (status, amount, shipping fee) |
+| | `order_items.csv` | 714.669 | Chi tiết đơn hàng (quantity, promo, discount) |
+| | `payments.csv` | — | Thanh toán (method, amount) |
+| | `shipments.csv` | — | Vận chuyển (courier, cost, status) |
+| | `returns.csv` | — | Hoàn trả (reason, refund amount) |
+| | `reviews.csv` | — | Đánh giá (rating 1–5, title, text) |
+| **Inventory** | `inventory.csv` | 60.247 | Tồn kho (stock, stockout days, sell-through rate) |
+| **Web traffic** | `web_traffic.csv` | 3.652 ngày | Lưu lượng truy cập (sessions, bounce rate, CR) |
+| **Target** | `sales.csv` | — | Doanh thu & giá vốn hàng ngày (train) |
+| | `sample_submission.csv` | 548 ngày | Ngày cần dự báo (01/2023 – 07/2024) |
+
+---
+
+## Thành viên
+
+| Tên | Vai trò |
+|-----|---------|
+| **Nguyễn Ngọc Khoa** | Trưởng đội · Modeling & Feature Engineering |
+| Nguyễn Thiên Ấn | EDA & Business Analysis |
+| Lê Công Minh | Data Cleaning & Visualization |
+| Lê Nguyên Khang | MCQ & Report Writing |
+
+---
+
+## Giấy phép
+
+Dự án này được phát triển cho mục đích thi đấu VinTelligence Datathon 2026.

@@ -523,6 +523,25 @@ def compute_aux_profiles():
     """
     profiles = {}
 
+    def _robust_winsorize(s: pd.Series, k: float = 8.0) -> pd.Series:
+        x = pd.to_numeric(s, errors="coerce").astype(float)
+        med = float(np.nanmedian(x))
+        mad = float(np.nanmedian(np.abs(x - med)))
+        sigma = 1.4826 * mad
+        if not np.isfinite(sigma) or sigma <= 0:
+            return x
+        lo = med - k * sigma
+        hi = med + k * sigma
+        return x.clip(lo, hi)
+
+    def _align_daily_index(df: pd.DataFrame, idx_name: str, start: pd.Timestamp, end: pd.Timestamp) -> pd.DataFrame:
+        full = pd.date_range(start, end, freq="D")
+        out = df.copy()
+        out.index = pd.to_datetime(out.index)
+        out = out.reindex(full)
+        out.index.name = idx_name
+        return out
+
     # ── Orders: average order count & cancel rate by day-of-week and month ──
     try:
         orders = pd.read_csv(
@@ -537,6 +556,15 @@ def compute_aux_profiles():
             order_count=("order_id", "count"),
             cancel_rate=("order_status", lambda x: (x == "cancelled").mean()),
         )
+        daily_orders = _align_daily_index(
+            daily_orders,
+            "order_date",
+            orders["order_date"].min(),
+            orders["order_date"].max(),
+        )
+        # Keep truly-missing days as NaN (NOT zeros) so profile means don't get biased low
+        daily_orders["order_count"] = _robust_winsorize(daily_orders["order_count"], k=8.0)
+        daily_orders["cancel_rate"] = pd.to_numeric(daily_orders["cancel_rate"], errors="coerce")
         daily_orders["dayofweek"] = daily_orders.index.dayofweek
         daily_orders["month"] = daily_orders.index.month
 
@@ -571,6 +599,15 @@ def compute_aux_profiles():
             return_count=("return_id", "count"),
             avg_refund=("refund_amount", "mean"),
         )
+        daily_returns = _align_daily_index(
+            daily_returns,
+            "return_date",
+            returns["return_date"].min(),
+            returns["return_date"].max(),
+        )
+        # Keep missing days as NaN to avoid biasing monthly averages toward zero
+        daily_returns["return_count"] = _robust_winsorize(daily_returns["return_count"], k=8.0)
+        daily_returns["avg_refund"] = pd.to_numeric(daily_returns["avg_refund"], errors="coerce")
         daily_returns["month"] = daily_returns.index.month
         profiles["returns_month"] = (
             daily_returns.groupby("month")
@@ -591,6 +628,21 @@ def compute_aux_profiles():
             total_visitors=("unique_visitors", "sum"),
             avg_bounce=("bounce_rate", "mean"),
         )
+        daily_wt = _align_daily_index(
+            daily_wt,
+            "date",
+            wt["date"].min(),
+            wt["date"].max(),
+        )
+        daily_wt["total_sessions"] = _robust_winsorize(
+            pd.to_numeric(daily_wt["total_sessions"], errors="coerce"),
+            k=8.0,
+        )
+        daily_wt["total_visitors"] = _robust_winsorize(
+            pd.to_numeric(daily_wt["total_visitors"], errors="coerce"),
+            k=8.0,
+        )
+        daily_wt["avg_bounce"] = pd.to_numeric(daily_wt["avg_bounce"], errors="coerce")
         daily_wt["dayofweek"] = daily_wt.index.dayofweek
         daily_wt["month"] = daily_wt.index.month
 

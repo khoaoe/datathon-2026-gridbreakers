@@ -1,0 +1,29 @@
+# Core
+numpy>=2.0
+pandas>=2.0
+scipy>=1.10
+
+# Machine Learning
+lightgbm>=4.0
+xgboost>=2.0
+scikit-learn>=1.3
+
+# Deep Learning (optional — for N-HiTS experiments)
+# torch>=2.0
+# neuralforecast>=3.0
+# pytorch-lightning>=2.0
+
+# Time Series
+prophet>=1.3
+holidays>=0.90
+
+# Explainability
+shap>=0.50
+
+# Visualization
+matplotlib>=3.8
+plotly>=5.0
+
+# Utilities
+tqdm>=4.60
+joblib>=1.3
