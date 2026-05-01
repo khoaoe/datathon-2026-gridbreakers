@@ -27,3 +27,12 @@ plotly>=5.0
 # Utilities
 tqdm>=4.60
 joblib>=1.3
+
+# EDA 
+matplotlib
+seaborn
+scikit-learn
+statsmodels
+plotly
+nbformat
+kaleido

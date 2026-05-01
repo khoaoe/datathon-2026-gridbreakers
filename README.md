@@ -1,7 +1,9 @@
 # Datathon 2026 — The Gridbreakers (VinTelligence)
 
-> Phân tích dữ liệu thương mại điện tử thời trang Việt Nam & dự báo doanh thu/giá vốn hàng ngày  
+> Phân tích dữ liệu doanh nghiệp thương mại điện tử thời trang Việt Nam & dự báo Doanh thu/Giá vốn hàng ngày  
+> 
 > **Cuộc thi:** VinTelligence Datathon 2026 - The Gridbreakers · Vòng 1
+> 
 > **Đội thi:** *Liên Minh Gridbreakers: Những Kẻ Tái Định Nghĩa Thực Tại Dữ Liệu và Kiến Tạo Tương Lai Cho Doanh Nghiệp*
 
 ---
@@ -78,6 +80,8 @@ Kiểm tra dữ liệu và thực hiện code để tìm đáp án cho 10 câu h
 4. **Hành vi khách hàng RFM × địa lý** — miền Trung có AOV cao nhất (+14,5%) nhưng thị phần thấp; 27,7% khách Never Purchased
 5. **Giao hàng × đánh giá** — tốc độ giao hàng chênh lệch chỉ 0,013 sao; driver thật sự là chất lượng sản phẩm
 
+>**Lưu ý**: sử dụng biểu đồ tương tác (Interactive Visualizations) được xây dựng hoàn toàn bằng thư viện **Plotly** nhằm thay thế Tableau, giúp duy trì tính nhất quán của data pipeline trực tiếp trên Python Notebook.
+
 ### Phần 3: Mô hình Dự báo Doanh thu (Sales Forecasting)
 
 **Source code chính**: `03_Forecasting/ex_03_lgbm.py` (EX-03: LightGBM recursive + FE v2)
@@ -112,7 +116,7 @@ conda activate datathon
 pip install -r requirements.txt
 
 # Chạy thực nghiệm chính
-python -m modeling.ex_03_lgbm
+python -m 03_Forecasting.ex_03_lgbm
 
 # Tạo biểu đồ explainability
 cd report && python generate_all_explainability.py
