@@ -45,8 +45,9 @@ datathon-2026-gridbreakers/
 │   ├── submissions/               # File nộp bài (CSV)
 │   └── tracking/                  # Log thực nghiệm
 ├── report/
-│   ├── report.tex                 # Mã nguồn LaTeX cho BÁO CÁO
 │   ├── figures/                   # Hình ảnh trong báo cáo
+│   ├── report.tex                 # Mã nguồn LaTeX cho BÁO CÁO
+│   └── report.pdf                 # BÁO CÁO
 └── README.md
 ```
 
