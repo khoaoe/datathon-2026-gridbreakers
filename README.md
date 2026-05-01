@@ -27,7 +27,7 @@ Dự án này giải quyết ba phần thi của VinTelligence Datathon 2026:
 datathon-2026-gridbreakers/
 ├── data/                          # Dữ liệu gốc (15 bảng CSV)
 ├── data_cleaning/                 # Script tiền xử lý dữ liệu
-├── modeling/                      # Mã nguồn hệ thống dự báo
+├── 03_Forecasting/                # Mã nguồn cho Phần 3: Mô hình Dự báo doanh thu
 │   ├── config.py                  #   Cấu hình đường dẫn, siêu tham số
 │   ├── feature_engineering.py     #   Trích xuất đặc trưng v3 (875 dòng)
 │   ├── tracker.py                 #   Theo dõi thực nghiệm
@@ -37,21 +37,16 @@ datathon-2026-gridbreakers/
 │   ├── ...                        #   52 biến thể thực nghiệm
 │   └── ex_52_recalibrated.py      #   EX-52: Monthly recalibration
 ├── notebook/
-│   ├── 00_Data_QA_and_Integrity.ipynb   # Kiểm tra chất lượng dữ liệu
-│   ├── 01_MCQ_Answers.ipynb             # Trả lời trắc nghiệm
-│   ├── 02_Baseline_SalesForecasting.ipynb # Notebook dự báo doanh thu
-│   └── EDA.ipynb                        # Phân tích khám phá dữ liệu (5 chủ đề)
+│   ├── 00_Data_QA_and_Integrity.ipynb # Kiểm tra chất lượng dữ liệu
+│   ├── 01_MCQ_Answers.ipynb           # PHẦN 1:Trả lời trắc nghiệm
+│   ├── 02_EDA.ipynb                   # PHẦN 2: Trực quan hóa và phân tích dữ liệu
 ├── output/
 │   ├── models/                    # Mô hình đã huấn luyện (pkl)
 │   ├── submissions/               # File nộp bài (CSV)
 │   └── tracking/                  # Log thực nghiệm
 ├── report/
-│   ├── neurips_2025.tex           # Báo cáo chính (NeurIPS format)
-│   ├── shap_feature_importance.png
-│   ├── shap_beeswarm.png
-│   ├── lgbm_gain_importance.png
-│   └── shap_dependence_top4.png
-├── experiments.md                 # Nhật ký 52 thực nghiệm
+│   ├── report.tex                 # Mã nguồn LaTeX cho BÁO CÁO
+│   ├── figures/                   # Hình ảnh trong báo cáo
 └── README.md
 ```
 
