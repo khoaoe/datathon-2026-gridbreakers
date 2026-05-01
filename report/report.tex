@@ -126,39 +126,82 @@ Sau một thập kỷ hoạt động, doanh nghiệp đã dịch chuyển từ g
 % ============================================================
 % MODELING
 % ============================================================
-
 \section{Kiến trúc hệ thống dự báo}
 \label{sec:modeling}
 
-Để dự báo doanh thu và giá vốn hàng ngày (multi-step, 548 ngày), hệ thống sử dụng \textbf{LightGBM} làm kiến trúc lõi sau khi benchmark đánh giá: Naive baseline (MAE 1.247M), N-HiTS Deep Learning (quá khớp, 1.28M), và LightGBM (973k, cân bằng nhất). Bảng cấu hình chi tiết tại \textbf{Phụ lục~\ref{app:experiments}}.
-Quá trình kỹ nghệ đặc trưng kéo giảm MAE xuống 791k, bao gồm:
-\begin{itemize}[noitemsep,leftmargin=1.2em]
-    \item \textbf{Hàm khoảng cách liên tục:} Chuyển đổi ngày lễ (\texttt{holidays.VN}) thành khoảng cách liên tục (\texttt{days\_to\_tet}) thay vì nhị phân, hấp thụ hiệu ứng lan tỏa (spillover).
-    \item \textbf{Phân rã sự kiện 'Ngày đôi':} Tách thành ba pha: mồi (teasing), bùng nổ (D-Day) và thoái trào (cool-down).
-    \item \textbf{Đặc trưng đệ quy đồng bộ:} Ưu tiên tham chiếu dài hạn (\texttt{lag\_365}, \texttt{lag\_183}) thay vì trễ ngắn hạn, giảm rò rỉ dữ liệu.
-    \item \textbf{Trọng số mục tiêu kép:} Hàm mất mát tối ưu hóa mức cơ sở đối với doanh thu, và thuộc tính làm trơn đối với dữ liệu giá vốn.
-\end{itemize}
+Hệ thống dự báo doanh thu và giá vốn trong 548 ngày được xây dựng nhằm phục vụ đồng thời hai nhu cầu quan trọng của doanh nghiệp: \textit{đảm bảo độ chính xác về mức doanh thu tuyệt đối} để hỗ trợ lập kế hoạch tài chính, và \textit{giữ được nhịp mùa vụ} để phục vụ các quyết định vận hành như tồn kho và khuyến mãi. Trong thực tế triển khai, hai yêu cầu này thường không dễ đạt được cùng lúc chỉ với một mô hình đơn lẻ.
 
-\subsection{Khả năng giải thích của mô hình (explainability)}
-\label{sec:explainability}
+% ────────────────────────────────────────────────────────────
+\subsection{Lựa chọn nền tảng mô hình}
 
-Để đánh giá mức đóng góp biên của từng đặc trưng, nghiên cứu sử dụng phân tích SHAP và chỉ số information gain của LightGBM. Chi tiết các biểu đồ trực quan (SHAP bar chart, LightGBM gain, beeswarm, partial dependence) và phân tích sâu được trình bày tại \textbf{Phụ lục~\ref{app:explainability}}.
+\textbf{LightGBM} được lựa chọn sau quá trình thử nghiệm và so sánh với nhiều hướng tiếp cận khác nhau (Bảng~\ref{tab:benchmark}). Một trong những bài học đáng chú ý đến từ mô hình N-HiTS: mặc dù đạt kết quả rất tốt trên tập kiểm định nội bộ (CV MAE 557k), nhưng khi đánh giá trên dữ liệu thực tế (Leaderboard), sai số lại tăng đáng kể (trên 1.28M). Điều này cho thấy với một tập dữ liệu chỉ kéo dài khoảng mười năm, các mô hình học sâu phức tạp có thể gặp khó khăn trong việc tổng quát hóa.
 
-Phân tích xác nhận ba nhóm đặc trưng chính chi phối dự báo: (1) \textbf{Biến trễ tự hồi quy:} \texttt{Revenue\_lag\_1} là chỉ báo mạnh nhất, phản ánh đặc thù quán tính cao của bán lẻ thời trang; (2) \textbf{Đặc trưng lịch và mùa vụ:} hiệu ứng chu kỳ lương (payday effect) được lượng hóa rõ nét qua biến \texttt{dayofmonth}, và xu hướng suy giảm dài hạn qua biến \texttt{trend}; (3) \textbf{Hồ sơ lịch sử:} các mẫu hành vi như doanh thu trung bình theo ngày-trong-tháng đóng góp tín hiệu ổn định. Đáng chú ý, sự hiện diện của \texttt{active\_discount\_sum} trong nhóm đóng góp cao cho thấy mô hình đã học được ảnh hưởng trực tiếp của cường độ khuyến mãi lên biến động doanh thu.
+Ngược lại, LightGBM thể hiện sự cân bằng tốt hơn giữa độ chính xác và tính ổn định, đồng thời vẫn giữ được khả năng giải thích — một yếu tố quan trọng khi kết quả dự báo được sử dụng trong các quyết định kinh doanh.
 
-\subsection{Tích lũy sai số đệ quy (recursive error accumulation) và giải pháp lai}
-Đặc điểm cố hữu làm giới hạn độ chính xác của các mô hình dự báo chuỗi thời gian trong tầm nhìn dài hạn là sự tích lũy sai số đệ quy (recursive error accumulation). 
-\begin{itemize}[noitemsep,leftmargin=1.2em]
-    \item \textbf{Cơ chế đệ quy (recursive approach):} Phương pháp này ước lượng chính xác mức doanh thu kỳ vọng (base level $\approx$ 3.99 tỷ VND/tháng). Tuy nhiên, sai số ngoại suy cục bộ tại từng bước thời gian lan truyền qua 548 chu kỳ, dẫn đến hiện tượng trôi dạt (drift) xu hướng tuyến tính (ví dụ: dự báo lệch pha từ mức tăng trưởng 5\% trong tháng đầu tiên lên mức định lượng 52\% tại thời điểm tháng thứ 11).
-    \item \textbf{Cơ chế phi trạng thái (stateless approach):} Cấu trúc mô hình được tối giản bằng cách loại bỏ các biến đầu vào tự hồi quy, thiết lập hàm quan hệ phụ thuộc hoàn toàn vào đặc trưng thời gian (time-derived features). Cơ chế này loại bỏ triệt để nhiễu đệ quy và duy trì tính ổn định của hàm cấu trúc mùa vụ (seasonality function), nhưng bù lại suy giảm khả năng ước lượng biên độ dao động tổng (chỉ hội tụ ở ngưỡng $\approx$ 3.71 tỷ VND/tháng).
-\end{itemize}
-\textbf{Giải pháp tích hợp lai (bridge blending):} Để cực đại hóa hiệu quả dự báo, kiến trúc hệ thống áp dụng cơ chế kết hợp (ensemble) có tỷ lệ quy đổi 85\% cho dự báo từ mô hình đệ quy sâu (EX-24) và 15\% từ mô hình phi trạng thái (EX-51). Tại đây, mạng đệ quy đóng vai trò là biến số mỏ neo (anchor) thiết lập trần doanh thu kỳ vọng, trong khi mạng phi trạng thái thực hiện chức năng hiệu chỉnh điều hòa (regularizer), kiểm soát hiện tượng phân kỳ sai số tăng trưởng tại nửa cuối chu kỳ kiểm thử.
+\begin{table}[H]
+\caption{Kết quả benchmark — Leaderboard MAE (VND)}
+\label{tab:benchmark}
+\centering
+\small
+\begin{tabular}{@{}p{4.5cm}p{5cm}rr@{}}
+\toprule
+Mô hình & Nhận xét & CV MAE & LB MAE \\
+\midrule
+Naive Baseline          & Điểm tham chiếu cơ bản                      & 837{,}000 & 1{,}247{,}026 \\
+N-HiTS Deep Learning    & Tốt trong nội bộ, kém ổn định ngoài thực tế & 557{,}000 & 1{,}287{,}946 \\
+LightGBM (khởi điểm)   & Cân bằng và dễ diễn giải                    & 560{,}000 &   973{,}611 \\
+\textbf{EX-51 Bridge}   & \textbf{Kiến trúc lai ba thành phần (cuối)} & \textbf{769{,}000} & \textbf{791{,}764} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\subsection{Tóm tắt thực nghiệm và phân tích cấu trúc mô hình}
-Quá trình xây dựng và hiệu chuẩn hệ thống học máy (đạt MAE leaderboard 791,764 từ baseline khởi điểm 1.247M) được thực hiện qua bộ quy trình phân tích với 52 biến thể mô hình. Bảng nhật ký cấu hình chi tiết 20 cột mốc nghiên cứu định lượng được cung cấp tại \textbf{Phụ lục~\ref{app:experiments}}. Từ quá trình này, việc quan sát cấu trúc EX-52 đem đến cái nhìn đa chiều về rủi ro của trạng thái lệch pha giữa phân phối tập kiểm định và tập kiểm tra (CV-LB divergence): cơ chế tái hiệu chuẩn chu kỳ tháng dựa trên sai số CV giảm thiểu đáng kể hàm lỗi nội bộ (CV MAE 726k) nhưng gây tổn hại nghiêm trọng lên năng lực nội suy khi đánh giá độc lập (LB MAE 923k).
+% ────────────────────────────────────────────────────────────
+\subsection{Kỹ nghệ đặc trưng: mã hóa nhịp kinh doanh vào mô hình}
 
-\paragraph{Định hướng mở rộng: mô hình hóa phần dư trực tiếp (residual correction).} 
-Nhằm thay thế sự phụ thuộc vào cơ chế hiệu chuẩn hậu kiểm của giải pháp lai (bridge blending), chiến lược lý thuyết tiếp theo tập trung vào cấu trúc học bù trừ (rectify-style). Trong hướng tiếp cận này, sau khi bộ mô hình đệ quy hoàn tất bảo toàn ước lượng doanh thu mức cơ sở (level-preserving), một mạng dự báo trực tiếp (direct models) phân rã theo khối thời gian (như $h \in [1-30]$, $h \in [31-90]$) sẽ được huấn luyện thứ cấp để ước tính véc-tơ phần dư (residuals vector). Điều này kỳ vọng sẽ loại bỏ triệt để hiện tượng sai số lan truyền mà không đòi hỏi thao tác can thiệp thủ công.
+Các đặc trưng được thiết kế dựa trực tiếp trên những gì quan sát được từ dữ liệu kinh doanh, thay vì áp dụng một cách máy móc các công thức tiêu chuẩn.
+
+\textbf{Tín hiệu cùng kỳ năm trước (\texttt{lag365-family}):} Trong ngành thời trang thương mại điện tử, yếu tố mùa vụ theo năm đóng vai trò rất rõ rệt. Ví dụ, hành vi mua sắm ngày 15/5/2023 thường giống với 15/5/2022 hơn là ngày liền trước đó. Vì vậy, các đặc trưng như \texttt{lag364}, \texttt{lag365}, \texttt{lag366} cùng với các thống kê liên quan và tỷ lệ tăng trưởng YoY (\texttt{yoy\_365\_730}) được sử dụng để khai thác trực tiếp quy luật này. Đồng thời, cách tiếp cận này cũng giúp hạn chế vấn đề tích lũy sai số trong dự báo dài hạn.
+
+\textbf{Khoảng cách đến kỳ nghỉ lễ:} Nhu cầu tiêu dùng không thay đổi đột ngột vào đúng ngày lễ, mà thường tăng dần từ trước đó. Do đó, thay vì chỉ sử dụng biến nhị phân (có/không), mô hình sử dụng khoảng cách liên tục đến ngày lễ (ví dụ: \texttt{days\_to\_tet}) để phản ánh tốt hơn sự thay đổi dần dần của hành vi mua sắm.
+
+\textbf{Phân rã sự kiện "Ngày đôi":} Các đợt khuyến mãi lớn như 10/10, 11/11 hay 12/12 thường có ba giai đoạn rõ rệt: giai đoạn khởi động (teasing), cao điểm (D-Day), và giảm nhiệt (cool-down). Việc tách riêng ba giai đoạn này giúp mô hình hiểu đúng hơn về biến động nhu cầu trước và sau sự kiện.
+
+\textbf{Hồ sơ lịch sử và cường độ khuyến mãi:} Các đặc trưng như doanh thu trung bình theo ngày/tháng cung cấp một “mức nền” ổn định cho dự báo. Bên cạnh đó, biến \texttt{active\_discount\_sum} phản ánh cường độ khuyến mãi cũng cho thấy ảnh hưởng đáng kể đến doanh thu, phù hợp với thực tế khi một phần lớn doanh thu đến từ các chương trình giảm giá.
+
+% ────────────────────────────────────────────────────────────
+\subsection{Vấn đề cốt lõi: sai số tích lũy trong dự báo dài hạn}
+\label{sec:snowball}
+
+Trong các mô hình đệ quy, dự báo tại thời điểm $t$ phụ thuộc vào kết quả dự báo trước đó ($t-1$). Điều này dẫn đến việc sai số có thể tích lũy dần theo thời gian, đặc biệt khi dự báo kéo dài nhiều bước như 548 ngày.
+
+Thực nghiệm cho thấy:
+- Mô hình đệ quy toàn phần có thể giữ đúng mức doanh thu trung bình, nhưng dễ bị lệch xu hướng theo thời gian.
+- Ngược lại, mô hình không sử dụng đệ quy giữ được cấu trúc mùa vụ tốt, nhưng lại đánh giá thấp mức doanh thu thực tế.
+
+Điều này cho thấy mỗi cách tiếp cận đều có điểm mạnh và hạn chế riêng, và khó có thể sử dụng độc lập trong thực tế.
+
+% ────────────────────────────────────────────────────────────
+\subsection{Kiến trúc ba thành phần và bridge blending}
+\label{sec:three_component}
+
+Để tận dụng ưu điểm của từng cách tiếp cận, hệ thống EX-51 được thiết kế gồm ba thành phần hoạt động song song:
+
+\textbf{Thành phần neo mức — Lag-365 Recursive:} Thành phần này chỉ sử dụng các biến \texttt{lag365-family}, loại bỏ hoàn toàn các lag ngắn hạn. Trong năm đầu dự báo, mô hình sử dụng dữ liệu thực tế nên không phát sinh sai số đệ quy. Từ năm thứ hai trở đi, sai số chỉ tích lũy ở mức tối thiểu. Nhờ đó, mô hình giữ được mức doanh thu ổn định.
+
+\textbf{Thành phần điều hòa mùa vụ — Stateless:} Thành phần này không sử dụng bất kỳ biến tự hồi quy nào, mà chỉ dựa vào đặc trưng lịch và hồ sơ lịch sử. Nhờ đó, mô hình không bị tích lũy sai số và giữ được nhịp mùa vụ một cách nhất quán.
+
+\textbf{Thành phần nền — Full Recursive:} Đây là mô hình đầy đủ với tất cả các đặc trưng, giúp nắm bắt tốt các biến động ngắn hạn. Tuy nhiên, để hạn chế rủi ro trong dài hạn, thành phần này chỉ chiếm một tỷ trọng nhỏ trong tổng thể.
+
+Tỷ trọng của ba thành phần được tối ưu thông qua cross-validation trên hai giai đoạn thời gian (2021 và 2022), với mục tiêu ưu tiên doanh thu hơn giá vốn. Sau đó, kết quả được kết hợp thêm với mô hình EX-24 theo tỷ lệ \textbf{85\%--15\%}.
+
+Trong đó, EX-24 đóng vai trò nắm bắt tín hiệu ngắn hạn, còn EX-51 giúp ổn định xu hướng dài hạn. Tỷ lệ này được lựa chọn dựa trên thử nghiệm thực tế và cho kết quả tốt nhất.
+
+% ────────────────────────────────────────────────────────────
+\subsection{Bài học: rủi ro tối ưu hóa quá mức nội bộ}
+
+Một kết quả đáng chú ý từ thực nghiệm EX-52 cho thấy việc tối ưu quá mức trên dữ liệu nội bộ có thể dẫn đến hiệu năng kém khi áp dụng thực tế. Cụ thể, mặc dù sai số trên tập kiểm định giảm đáng kể, nhưng khi đánh giá trên dữ liệu độc lập, sai số lại tăng lên.
+
+Điều này phản ánh việc mô hình đã học quá sát với dữ liệu quá khứ thay vì nắm bắt được quy luật tổng quát. Vì vậy, trong toàn bộ quá trình phát triển, nguyên tắc được ưu tiên là \textit{duy trì sự ổn định giữa kết quả nội bộ và thực tế}, thay vì chỉ tập trung vào việc tối ưu một chỉ số duy nhất.
 
 
 
@@ -535,4 +578,46 @@ EX & Tên mô hình / cấu trúc & Định nghĩa \& phương pháp cải tiế
 \end{tabular}
 \end{table}
 
+
+\subsection{Phân tích kỹ thuật kiến trúc hệ thống dự báo}
+\label{app:modeling_detail}
+
+\subsubsection{Chi tiết nhóm đặc trưng lag365-family}
+
+Nhóm \texttt{lag365-family} bao gồm bảy đặc trưng được xây dựng từ cùng một nguồn gốc — giá trị thực tế cùng kỳ năm trước — nhưng phục vụ các vai trò khác nhau trong mô hình:
+
+\begin{itemize}[noitemsep, leftmargin=1.5em]
+    \item \texttt{lag\_364/365/366}: Ba điểm neo xung quanh cùng kỳ năm trước, hấp thụ sai lệch khi ngày lễ rơi vào thứ khác nhau giữa hai năm (ví dụ: Tết 2022 khác ngày so với Tết 2023).
+    \item \texttt{lag365\_rmean28}, \texttt{lag365\_rmean30}: Trung bình trượt 28 và 30 ngày của cùng kỳ năm trước, làm mượt nhiễu ngẫu nhiên để trích xuất xu hướng tháng ổn định hơn.
+    \item \texttt{lag365\_rstd28}: Độ lệch chuẩn trượt 28 ngày, lượng hóa mức độ biến động của từng thời điểm trong năm — cao ở giai đoạn sự kiện, thấp ở giai đoạn bình thường.
+    \item \texttt{lag365\_smooth7}: Phiên bản làm trơn 7 ngày, ổn định tín hiệu ngắn hạn trước khi đưa vào mô hình.
+    \item \texttt{yoy\_365\_730}: Tỷ số \texttt{lag\_365} / \texttt{lag\_730}, lượng hóa tốc độ tăng trưởng năm-trên-năm tại từng thời điểm — cung cấp tín hiệu về quỹ đạo dài hạn mà không phụ thuộc vào giá trị tuyệt đối.
+\end{itemize}
+
+Lý do chiến lược để ưu tiên nhóm này so với \texttt{lag\_1/7/28}: trong 365 ngày đầu tập kiểm tra (năm 2023), \texttt{lag\_365} tham chiếu dữ liệu thực năm 2022 — không phát sinh vòng đệ quy. Chỉ từ ngày 366 (năm 2024) mới xuất hiện một thế hệ sai số duy nhất, thay vì 548 thế hệ tích lũy như \texttt{lag\_1}.
+
+\subsubsection{Cơ chế tối ưu hóa tỷ trọng ensemble}
+
+Tỷ trọng ba thành phần $(w_1, w_2, w_3)$ được tìm kiếm trên lưới đều với bước 0.1, ràng buộc $w_1 + w_2 + w_3 = 1$ và $w_i \geq 0$. Hàm mục tiêu tối thiểu hóa tổng sai số có trọng số:
+
+\[
+\mathcal{L}(w_1, w_2, w_3) = \underbrace{1.0 \cdot \text{MAE}_{\text{Revenue}}}_{\text{ảnh hưởng ngân sách}} + \underbrace{0.4 \cdot \text{MAE}_{\text{COGS}}}_{\text{ảnh hưởng giá vốn}}
+\]
+
+Trọng số không đối xứng 1.0 và 0.4 phản ánh mức độ ảnh hưởng kinh doanh khác nhau: sai số dự báo doanh thu tác động trực tiếp đến quyết định ngân sách và kế hoạch khuyến mãi, trong khi sai số giá vốn được hấp thụ một phần qua biên lợi nhuận. Tỷ trọng tối ưu được tính trung bình từ hai fold (2021 và 2022) trước khi áp dụng cho lần huấn luyện toàn bộ dữ liệu. Mỗi thành phần sử dụng seed ensemble 3 mô hình (N\_SEEDS = 3) để giảm phương sai do khởi tạo ngẫu nhiên.
+
+\subsubsection{Lộ trình cải thiện qua các mốc thực nghiệm}
+
+Bảng~\ref{tab:experiments} tổng hợp 20 mốc thực nghiệm định hình không gian tham số. Bốn bước nhảy MAE lớn nhất tương ứng với bốn quyết định kỹ thuật có tác động kinh doanh rõ ràng nhất:
+
+\begin{itemize}[noitemsep, leftmargin=1.5em]
+    \item \textbf{EX-03 → EX-19} (973k → 834k): Chuyển từ hàm mất mát đơn sang trọng số kép bất đối xứng Revenue/COGS, phản ánh mức độ ưu tiên kinh doanh khác nhau giữa hai biến mục tiêu.
+    \item \textbf{EX-21 → EX-22} (820k → 796k): Tích hợp hàm khoảng cách kỳ nghỉ lễ liên tục, thay thế biến nhị phân — hấp thụ hiệu ứng lan tỏa trước/sau Tết.
+    \item \textbf{EX-22 → EX-24} (796k → 795k): Phân rã sự kiện "Ngày đôi" thành ba pha hành vi, cải thiện dự báo tại các đỉnh doanh thu sự kiện.
+    \item \textbf{EX-24 + EX-51 Bridge} (795k → 791k): Kết hợp lai 85\%--15\%, thành phần EX-51 đóng vai trò hiệu chỉnh dài hạn kiểm soát trôi dạt ở nửa sau chu kỳ 548 ngày.
+\end{itemize}
+
+\subsubsection{Phân tích CV-LB divergence: bài học từ EX-52}
+
+EX-52 là thực nghiệm có chênh lệch CV-LB lớn nhất trong toàn bộ chuỗi: CV MAE 726k nhưng LB MAE 923k, phân kỳ 197k (27\%). Cơ chế tái chuẩn hóa phân phối dư lượng hàng tháng đã điều chỉnh mô hình để khớp chính xác với đặc thù sai số của hai năm kiểm thử nội bộ (2021--2022), nhưng đặc thù đó không tổng quát hóa sang tập kiểm tra độc lập. Biến thể Bridge w15 và w30 kết hợp EX-52 cũng cho LB MAE $>$ 798k, xác nhận rằng vấn đề nằm ở bản thân EX-52 chứ không phải cơ chế blend. So sánh trực tiếp với EX-51 (LB MAE 917k khi đứng độc lập, 791k khi blend với EX-24) cho thấy: tái chuẩn hóa nội bộ không thay thế được kiến trúc tổng quát hóa tốt.
 \end{document}
